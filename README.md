@@ -2,6 +2,7 @@
 ## 1. Architecture
 ### 1.1. Class diagram
 ![alt tag](http://docs.jboss.org/hibernate/orm/5.2/userguide/html_single/images/architecture/JPA_Hibernate.svg)
+
 `SessionFactory` `(org.hibernate.SessionFactory)`
 A thread-safe (and immutable) representation of the mapping of the application domain model to a database. Acts as a factory for `org.hibernate.Session` instances. The `EntityManagerFactory` is the JPA equivalent of a `SessionFactory` and basically those two converge into the same `SessionFactory` implementation.
 
