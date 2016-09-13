@@ -70,12 +70,13 @@ Entities, by nature of their unique identifier, exist independently of other obj
 When an entity does not explicitly name the database table that it maps to, Hibernate need to implicitly determine that table name. Or when a particular attribute does not explicitly name the database column that it maps to, Hibernate need to implicitly determine that column name.
 Setting ImplicitNamingStrategy:
 `hibernate.implicit_naming_strategy`:
+
 1. pre-defined:
-* `default` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl` - an alias for `jpa`
-* `jpa` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl` - the JPA 2.0 compliant naming strategy
-* `legacy-hbm` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl` - compliant with the original Hibernate NamingStrategy
-* `legacy-jpa` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl` - compliant with the legacy NamingStrategy developed for JPA 1.0, which was unfortunately unclear in many respects regarding implicit naming rules.
-* `component-path` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl` - mostly follows `ImplicitNamingStrategyJpaCompliantImpl` rules, except that it uses the full composite paths, as opposed to just the ending property part
+    * `default` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl` - an alias for `jpa`
+    * `jpa` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl` - the JPA 2.0 compliant naming strategy
+    * `legacy-hbm` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl` - compliant with the original Hibernate     NamingStrategy
+    * `legacy-jpa` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl` - compliant with the legacy             NamingStrategy developed for JPA 1.0, which was unfortunately unclear in many respects regarding implicit naming rules.
+    * `component-path` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl` - mostly follows `ImplicitNamingStrategyJpaCompliantImpl` rules, except that it uses the full composite paths, as opposed to just the ending property part
 2. reference to Class that implements `org.hibernate.boot.model.naming.ImplicitNamingStrategy` contract
 
 #### 2.2.2. PhysicalNamingStrategy
