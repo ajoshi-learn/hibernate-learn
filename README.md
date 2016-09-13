@@ -83,3 +83,23 @@ Setting ImplicitNamingStrategy:
 Many organizations define rules around the naming of database objects (tables, columns, foreign-keys, etc). The idea of a PhysicalNamingStrategy is to help implement such naming rules without having to hard-code them into the mapping via explicit names.
 While the purpose of an ImplicitNamingStrategy is to determine that an attribute named `accountNumber` maps to a logical column name of `accountNumber` when not explicitly specified, the purpose of a PhysicalNamingStrategy would be, for example, to say that the physical column name should instead be abbreviated `acct_num`.
  
+### 2.3. Basic Types
+#### 2.3.1. Hibernate provided BasicTypes
+
+| JDBC          | Java                  |
+| ------------- |:---------------------:|
+| VARCHAR       | String                |
+| CHAR          | char, Character       |
+| BIT           | boolean, Boolean      |
+| TINYINT       | byte, Byte            |
+| SMALLINT      | short, Short          |
+| INTEGER       | int, Integer          |
+| BIGINT        | long, Long            |
+| FLOAT         | float, Float          |
+| DOUBLE        | double, Double        |
+| INTEGER       | BigInteger, BigDecimal|
+| DATE          | Date, Calendar        |
+| VARCHAR       | Class                 |
+| INTEGER       | int, Integer    |
+
+These mappings are managed by a service inside Hibernate called the 'BasicTypeRegistry', which essentially maintains a map of 'org.hibernate.type.BasicType' (a 'org.hibernate.type.Type' specialization) instances keyed by a name.
