@@ -1,6 +1,7 @@
 package app.chapter2.mappingtypes.entities;
 
 import lombok.*;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 
@@ -9,6 +10,8 @@ import javax.persistence.*;
  */
 @Entity
 @Table(name = "employee")
+@Data
+@NoArgsConstructor
 public class Employee {
 
     @Id
@@ -18,26 +21,7 @@ public class Employee {
     @Column
     private String name;
 
-    public Employee() {
-    }
-
-    public Employee(String name) {
-        this.name = name;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    @Column(columnDefinition = "smallint")
+    @Type(type = "org.hibernate.type.NumericBooleanType")
+    private boolean sex;
 }

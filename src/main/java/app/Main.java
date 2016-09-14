@@ -13,6 +13,7 @@ public class Main {
         Session session = sessionFactory.openSession();
         Employee employee = new Employee();
         employee.setName("aj");
+        employee.setSex(true);
         session.save(employee);
         session.close();
         sessionFactory.close();
