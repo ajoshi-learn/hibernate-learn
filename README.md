@@ -98,7 +98,8 @@ While the purpose of an ImplicitNamingStrategy is to determine that an attribute
 | BIGINT        | long, Long            |
 | FLOAT         | float, Float          |
 | DOUBLE        | double, Double        |
-| INTEGER       | BigInteger, BigDecimal|
+| NUMERIC       | BigInteger, BigDecimal|
+| TIME          | Time                  |
 | DATE          | Date, Calendar        |
 | VARCHAR       | Class                 |
 | INTEGER       | int, Integer    |
