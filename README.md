@@ -167,7 +167,8 @@ The original JPA-compliant way to map enums was via the `@Enumerated` and `@MapK
 
 [Mapping example](src/main/java/app/chapter2/enums/enumssimpleexample)
 
-`AttributeConverter`
+**AttributeConverter**
+
 You can write your own attribute converter by implementing AttributeConverter<X, Y> 
 
 [Mapping example](src/main/java/app/chapter2/enums/attributeconverterexample)
