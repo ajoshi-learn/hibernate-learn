@@ -164,3 +164,8 @@ The original JPA-compliant way to map enums was via the `@Enumerated` and `@MapK
 
 `STRING`
 - stored according to the enum value’s name, as indicated by java.lang.Enum#name
+[Mapping example](src/main/java/app/chapter2/enums/enumssimpleexample)
+
+`AttributeConverter`
+You can write your own attribute converter by implementing AttributeConverter<X, Y> 
+[Mapping example](src/main/java/app/chapter2/enums/attributeconverterexample)

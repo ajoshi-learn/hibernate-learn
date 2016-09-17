@@ -1,9 +1,11 @@
 package app;
 
 import app.chapter2.customtypes.custombasictype.entities.Product;
+import app.chapter2.enums.attributeconverterexample.enities.Gender;
+import app.chapter2.enums.attributeconverterexample.enities.Person;
 import app.chapter2.mappingtypes.entities.Employee;
-import app.chapter2.enumsexample.Phone;
-import app.chapter2.enumsexample.PhoneType;
+import app.chapter2.enums.enumssimpleexample.Phone;
+import app.chapter2.enums.enumssimpleexample.PhoneType;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
@@ -16,9 +18,7 @@ public class Main {
     public static void main(String[] args) {
         SessionFactory sessionFactory = HibernateConfigurator.getSessionFactory();
         Session session = sessionFactory.openSession();
-        testSimpleEntitySaving(session);
-        testCustomBasicType(session);
-        testEnums(session);
+        testEnumsAttributeConverter(session);
         session.close();
         sessionFactory.close();
     }
@@ -46,5 +46,12 @@ public class Main {
         phone.setPhoneType(PhoneType.MOBILE);
         session.save(phone);
         System.out.println("saved");
+    }
+
+    private static void testEnumsAttributeConverter(Session session) {
+        Person person = new Person();
+        person.setName("aj");
+        person.setGender(Gender.MALE);
+        session.save(person);
     }
 }

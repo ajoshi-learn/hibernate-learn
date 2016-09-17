@@ -1,4 +1,4 @@
-package app.chapter2.enumsexample;
+package app.chapter2.enums.enumssimpleexample;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

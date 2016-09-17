@@ -1,6 +1,6 @@
 package app.chapter2.mappingtypes.entities;
 
-import app.chapter2.enumsexample.PhoneType;
+import app.chapter2.enums.enumssimpleexample.PhoneType;
 import lombok.*;
 import org.hibernate.annotations.Type;
 
