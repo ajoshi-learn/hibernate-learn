@@ -7,7 +7,10 @@
         <property name="hibernate.connection.url">jdbc:postgresql://localhost/hibernate-samples</property>
         <property name="hibernate.connection.username">postgres</property>
         <property name="hibernate.connection.password">root</property>
-        <property name="hibernate.hbm2ddl.auto">create</property>
+        <property name="hibernate.hbm2ddl.auto">update</property>
         <property name="show_sql">true</property>
+        <mapping class="app.chapter2.enumsexample.Phone"/>
+        <mapping class="app.chapter2.customtypes.custombasictype.entities.Product"/>
+        <mapping class="app.chapter2.mappingtypes.entities.Employee"/>
     </session-factory>
 </hibernate-configuration>

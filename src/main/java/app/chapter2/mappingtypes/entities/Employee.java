@@ -1,5 +1,6 @@
 package app.chapter2.mappingtypes.entities;
 
+import app.chapter2.enumsexample.PhoneType;
 import lombok.*;
 import org.hibernate.annotations.Type;
 
@@ -24,4 +25,7 @@ public class Employee {
     @Column(columnDefinition = "smallint")
     @Type(type = "org.hibernate.type.NumericBooleanType")
     private boolean sex;
+    @Enumerated(EnumType.ORDINAL)
+    @Column(name = "phone_type")
+    private PhoneType phoneType;
 }

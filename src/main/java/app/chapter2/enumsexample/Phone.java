@@ -6,10 +6,12 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 
 @Entity
+@Table(name = "phones")
 @NoArgsConstructor
 @Data
 public class Phone {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "phone_number")
     private String number;

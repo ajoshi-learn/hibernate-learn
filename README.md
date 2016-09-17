@@ -152,3 +152,15 @@ Hibernate makes it relatively easy for developers to create their own basic type
 There are two approaches to developing a custom type:
 * implementing a `BasicType` and registering it
 * implement a `UserType` which doesn’t require type registration
+
+#### 2.3.7. Mapping enums
+There are some different ways to implement enums mapping:
+
+`@Enumerated`
+The original JPA-compliant way to map enums was via the `@Enumerated` and `@MapKeyEnumerated` for map keys annotations which works on the principle that the enum values are stored according to one of 2 strategies indicated by `javax.persistence.EnumType`:
+
+`ORDINAL`
+- stored according to the enum value’s ordinal position within the enum class, as indicated by java.lang.Enum#ordinal
+
+`STRING`
+- stored according to the enum value’s name, as indicated by java.lang.Enum#name

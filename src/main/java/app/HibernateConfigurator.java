@@ -12,9 +12,9 @@ public class HibernateConfigurator {
 
     static {
         Configuration configuration = new Configuration().configure();
-//        configuration.registerTypeContributor(((typeContributions, serviceRegistry) -> {
-//            typeContributions.contributeType(BitSetType.INSTANCE);
-//        }));
+        configuration.registerTypeContributor(((typeContributions, serviceRegistry) -> {
+            typeContributions.contributeType(BitSetType.INSTANCE);
+        }));
         sessionFactory = configuration.buildSessionFactory();
     }
 

@@ -2,6 +2,8 @@ package app;
 
 import app.chapter2.customtypes.custombasictype.entities.Product;
 import app.chapter2.mappingtypes.entities.Employee;
+import app.chapter2.enumsexample.Phone;
+import app.chapter2.enumsexample.PhoneType;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
@@ -14,22 +16,35 @@ public class Main {
     public static void main(String[] args) {
         SessionFactory sessionFactory = HibernateConfigurator.getSessionFactory();
         Session session = sessionFactory.openSession();
+        testSimpleEntitySaving(session);
+        testCustomBasicType(session);
+        testEnums(session);
         session.close();
         sessionFactory.close();
     }
 
     private static void testSimpleEntitySaving(Session session) {
         Employee employee = new Employee();
-        employee.setName("aj");
+        employee.setName("kk");
         employee.setSex(true);
+        employee.setPhoneType(PhoneType.MOBILE);
         session.save(employee);
     }
 
     private static void testCustomBasicType(Session session) {
-        BitSet bitSet = BitSet.valueOf(new long[]{1, 2, 3});
+        BitSet bitSet = BitSet.valueOf(new long[]{10, 20, 30});
         Product product = new Product();
         product.setId(1);
         product.setBitSet(bitSet);
-        session.persist(product);
+        session.save(product);
+    }
+
+    private static void testEnums(Session session) {
+        Phone phone = new Phone();
+        phone.setId(1L);
+        phone.setNumber("0961212314");
+        phone.setPhoneType(PhoneType.MOBILE);
+        session.save(phone);
+        System.out.println("saved");
     }
 }
