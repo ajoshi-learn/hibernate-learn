@@ -1,5 +1,6 @@
 package app;
 
+import app.chapter2.customtypes.customusertype.BitSetUserType;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
@@ -11,6 +12,8 @@ public class HibernateConfigurator {
 
     static {
         Configuration configuration = new Configuration().configure();
+        configuration.registerTypeContributor(((typeContributions, serviceRegistry) ->
+                typeContributions.contributeType(BitSetUserType.INSTANCE, "bitset")));
         sessionFactory = configuration.buildSessionFactory();
     }
 

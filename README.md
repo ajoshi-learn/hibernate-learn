@@ -105,3 +105,50 @@ While the purpose of an ImplicitNamingStrategy is to determine that an attribute
 | INTEGER       | int, Integer    |
 
 These mappings are managed by a service inside Hibernate called the 'BasicTypeRegistry', which essentially maintains a map of 'org.hibernate.type.BasicType' (a 'org.hibernate.type.Type' specialization) instances keyed by a name.
+
+#### 2.3.2. The `@Basic` annotation
+Strictly speaking, a basic type is denoted with with the javax.persistence.Basic annotation. Generally speaking, the @Basic annotation can be ignored, as it is assumed by default. Both of the following examples are ultimately the same.
+The JPA spec strictly limit Java types that can be marked as basic:
+* Java primitives
+* Wrappers to primitives
+* `String`
+* `BigInteger`, `BigDecimal`
+* `java.util.Date`, `java.util.Calendar`, `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp`
+* `byte[]` or `Byte[]`
+* `char[]` or `Character[]`
+* `enums`
+* any other that implements `Serializable`
+
+The `@Basic` annotation defines 2 attributes.
+
+`optional` - boolean (defaults to true)
+Defines whether this attribute allows nulls. JPA defines this as "a hint", which essentially means that it effect is specifically required. As long as the type is not primitive, Hibernate takes this to mean that the underlying column should be NULLABLE.
+
+`fetch` - FetchType (defaults to EAGER)
+Defines whether this attribute should be fetched eagerly or lazily. JPA says that EAGER is a requirement to the provider (Hibernate) that the value should be fetched when the owner is fetched, while LAZY is merely a hint that the value be fetched when the attribute is accessed. Hibernate ignores this setting for basic types unless you are using bytecode enhancement.
+
+#### 2.3.3. The `@Column` annotation
+For basic type attributes, the implicit naming rule is that the column name is the same as the attribute name. If that implicit naming rule does not meet your requirements, you can explicitly tell Hibernate (and other providers) the column name to use.
+
+#### 2.3.4. BasicTypeRegistry
+`org.hibernate.type.BasicTypeRegistry` maintains a map of org.hibernate.type.BasicType (a org.hibernate.type.Type specialization) instances keyed by a name.
+For example: 
+as a baseline within `BasicTypeRegistry`, Hibernate follows the recommended mappings of JDBC for Java types. JDBC recommends mapping Strings to VARCHAR, which is the exact mapping that `StringType` handles. So that is the baseline mapping within `BasicTypeRegistry` for Strings.
+
+#### 2.3.5. Explicit BasicTypes
+To say Hibernate explicitly which BasicType to pick we can use `@Type` annotation:
+```
+@org.hibernate.annotations.Type( type = "nstring" )
+private String name;
+```
+This tells Hibernate to store the Strings as nationalized data.
+The `org.hibernate.annotations.Type#type` attribute can name any of the following:
+* Fully qualified name of any org.hibernate.type.Type implementation
+* Any key registered with BasicTypeRegistry
+* The name of any known type _definitions_
+
+#### 2.3.6. Custom BasicTypes
+Hibernate makes it relatively easy for developers to create their own basic type mappings type. For example, you might want to persist properties of type `java.util.BigInteger` to VARCHAR columns, or support completely new types.
+There are two approaches to developing a custom type:
+* implementing a `BasicType` and registering it
+* implement a `UserType` which doesn’t require type registration
