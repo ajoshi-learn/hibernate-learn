@@ -1,16 +1,11 @@
-package app.chapter2.customtypes.customusertype;
+package app.chapter2.customtypes.custombasictype;
 
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 
 import java.util.BitSet;
 
-/**
- * Created by ajoshi on 15-Sep-16.
- */
-public class BitSetTypeDescriptor extends AbstractTypeDescriptor<BitSet> {
-
-    private static final String DELIMITER = ",";
+public class BitSetTypeDescriptor extends AbstractTypeDescriptor<BitSet> {private static final String DELIMITER = ",";
 
     public static final BitSetTypeDescriptor INSTANCE = new BitSetTypeDescriptor();
 
