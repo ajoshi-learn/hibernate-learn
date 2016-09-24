@@ -172,3 +172,22 @@ The original JPA-compliant way to map enums was via the `@Enumerated` and `@MapK
 You can write your own attribute converter by implementing AttributeConverter<X, Y> 
 
 [Mapping example](src/main/java/app/chapter2/enums/attributeconverterexample)
+
+#### 2.3.8. Mapping LOBs
+Mapping LOBs (database Large Objects) come in 2 forms, those using the JDBC locator types and those materializing the LOB data.
+
+JDBC LOB locators exist to allow efficient access to the LOB data. They allow the JDBC driver to stream parts of the LOB data as needed, potentially freeing up memory space. However they can be unnatural to deal with and have certain limitations. For example, a LOB locator is only portably valid during the duration of the transaction in which it was obtained.
+
+The idea of materialized LOBs is to trade-off the potential efficiency (not all drivers handle LOB data efficiently) for a more natural programming paradigm using familiar Java types such as String or byte[], etc for these LOBs.
+
+The JDBC LOB locator types include:
+
+* java.sql.Blob
+
+* java.sql.Clob
+
+* java.sql.NClob
+
+[Clob mapping example](src/main/java/app/chapter2/lobs/)
+
+BLOB data is mapped in a similar fashion.
