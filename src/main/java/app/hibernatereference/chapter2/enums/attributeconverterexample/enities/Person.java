@@ -1,6 +1,6 @@
-package app.chapter2.enums.attributeconverterexample.enities;
+package app.hibernatereference.chapter2.enums.attributeconverterexample.enities;
 
-import app.chapter2.enums.attributeconverterexample.converter.GenderConverter;
+import app.hibernatereference.chapter2.enums.attributeconverterexample.converter.GenderConverter;
 import lombok.Data;
 
 import javax.persistence.*;

@@ -1,4 +1,4 @@
-package app.chapter2.customtypes.custombasictype;
+package app.hibernatereference.chapter2.customtypes.custombasictype;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;

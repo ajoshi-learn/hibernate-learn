@@ -1,4 +1,4 @@
-package app.chapter2.customtypes.custombasictype;
+package app.hibernatereference.chapter2.customtypes.custombasictype;
 
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;

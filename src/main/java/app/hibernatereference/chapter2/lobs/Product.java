@@ -1,4 +1,4 @@
-package app.chapter2.lobs;
+package app.hibernatereference.chapter2.lobs;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

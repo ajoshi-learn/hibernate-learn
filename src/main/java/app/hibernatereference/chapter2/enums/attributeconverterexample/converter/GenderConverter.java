@@ -1,6 +1,6 @@
-package app.chapter2.enums.attributeconverterexample.converter;
+package app.hibernatereference.chapter2.enums.attributeconverterexample.converter;
 
-import app.chapter2.enums.attributeconverterexample.enities.Gender;
+import app.hibernatereference.chapter2.enums.attributeconverterexample.enities.Gender;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;

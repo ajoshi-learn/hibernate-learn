@@ -1,19 +1,12 @@
 package app;
 
-import app.chapter2.enums.attributeconverterexample.enities.Gender;
-import app.chapter2.enums.attributeconverterexample.enities.Person;
-import app.chapter2.lobs.Product;
-import app.chapter2.mappingtypes.entities.Employee;
-import app.chapter2.enums.enumssimpleexample.Phone;
-import app.chapter2.enums.enumssimpleexample.PhoneType;
+import app.hibernatereference.chapter2.lobs.Product;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.engine.jdbc.ClobProxy;
 
 import java.io.Serializable;
-import java.util.BitSet;
-import java.util.function.Function;
 
 /**
  * Created by ajoshi on 12-Sep-16.
