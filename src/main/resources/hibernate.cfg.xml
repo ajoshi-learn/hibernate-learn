@@ -4,7 +4,7 @@
     <session-factory>
         <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQL9Dialect</property>
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
-        <property name="hibernate.connection.url">jdbc:postgresql://localhost/hibernate-samples</property>
+        <property name="hibernate.connection.url">jdbc:postgresql://localhost/jpwh</property>
         <property name="hibernate.connection.username">postgres</property>
         <property name="hibernate.connection.password">root</property>
         <property name="hibernate.hbm2ddl.auto">update</property>

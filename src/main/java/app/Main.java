@@ -1,5 +1,6 @@
 package app;
 
+import app.book.entities.Item;
 import app.hibernatereference.chapter2.lobs.Product;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -15,10 +16,7 @@ public class Main {
     public static void main(String[] args) {
         SessionFactory sessionFactory = HibernateConfigurator.getSessionFactory();
         Session session = sessionFactory.openSession();
-        session.beginTransaction();
-        testClobs(session);
-        session.flush();
-        session.getTransaction().commit();
+
         session.close();
         sessionFactory.close();
     }
@@ -55,15 +53,15 @@ public class Main {
 //        session.save(person);
 //    }
 
-    private static void testClobs(Session session) {
-        String warranty = "My product warranty";
-        Product product = new Product();
-        product.setId(1);
-        product.setName("Phone");
-        session.doWork(connection -> product.setWarranty(ClobProxy.generateProxy(warranty)));
-        session.doWork(connection -> product.setImage(BlobProxy.generateProxy(new byte[]{1, 2, 3})));
-        Serializable saved = session.save(product);
-        System.out.println(saved);
+//    private static void testClobs(Session session) {
+//        String warranty = "My product warranty";
+//        Product product = new Product();
+//        product.setId(1);
+//        product.setName("Phone");
+//        session.doWork(connection -> product.setWarranty(ClobProxy.generateProxy(warranty)));
+//        session.doWork(connection -> product.setImage(BlobProxy.generateProxy(new byte[]{1, 2, 3})));
+//        Serializable saved = session.save(product);
+//        System.out.println(saved);
 
 //        Reading clobs
 //        Product product = entityManager.find( Product.class, productId );
@@ -77,6 +75,4 @@ public class Main {
 //        try (InputStream inputStream = product.getImage().getBinaryStream()) {
 //            assertArrayEquals(new byte[] {1, 2, 3}, toBytes( inputStream ) );
 //        }
-    }
-
 }
