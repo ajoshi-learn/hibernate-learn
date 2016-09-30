@@ -109,6 +109,11 @@ class name MyEntity {
 ```
 
 If you want to make your custom sequence generator, you should use `SequenceGenerator` annotation:
-`@SequenceGenerator(name = "MY_SEQ", initialValue = 123, allocationSize = 20)`
-
- 
+```
+@Entity
+@SequenceGenerator(name = "MY_SEQ", initialValue = 123, allocationSize = 20)
+class name MyEntity {
+    @Id @GeneratedValue(generator = "mySequenceGenerator")
+    String id;
+}
+```
