@@ -1,8 +1,11 @@
 package app.book.entities;
 
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,7 +14,14 @@ import java.util.Set;
  */
 @NoArgsConstructor
 @Data
+@Entity
+@Table(name = "CATEGORY")
 public class Category {
+
+    @Setter(AccessLevel.PRIVATE)
+    @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(name = "CATEGORY_ID")
+    private Long id;
     private String name;
     private Category parentCategory;
 
