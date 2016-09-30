@@ -1,6 +1,5 @@
 package app;
 
-import app.hibernatereference.chapter2.customtypes.custombasictype.BitSetType;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 

@@ -117,3 +117,13 @@ class name MyEntity {
     String id;
 }
 ```
+
+To create own identifier generator `IdentifierGenerator` interface should be implemented
+ 
+#### Dynamic SQL generation
+In some situations, such as a legacy table with hundreds of columns where the SQL statements will be large for even the simplest operations (say, only one column needs updating), you have to turn off this startup SQL generation and switch to dynamic statements generated at runtime.
+To disable dynamic insertion/updating you have to use `@DynamicInsert` and `@DynamicUpdate` annotations
+It is also useful for immutable classes
+
+#### Making an entity immutable
+Just put `@Immutable` annotation under the entity. It will entail avoiding dirty checking, for example.
