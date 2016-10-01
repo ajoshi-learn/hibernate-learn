@@ -205,6 +205,7 @@ interface) identifier and other property mappings.
 
 #### _Table per class hierarchy_
 ![alt tag](readmeImgs/tableHierarchy.png)
+
 There is one major problem: Columns for properties declared by subclasses must be declared to be nullable.
 [Mapping example(Address and User classes)](src/main/java/app/book/entities/inheritanceexamples/tableperclasshierarchy)
 
