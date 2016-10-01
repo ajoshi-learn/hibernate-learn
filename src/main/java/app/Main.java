@@ -1,13 +1,10 @@
 package app;
 
-import app.book.entities.Item;
-import app.hibernatereference.chapter2.lobs.Product;
+import app.book.entities.User;
+import app.book.entities.inheritanceexamples.tableperclasshierarchy.BankAccount;
+import app.book.entities.inheritanceexamples.tableperclasshierarchy.CreditCard;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.engine.jdbc.BlobProxy;
-import org.hibernate.engine.jdbc.ClobProxy;
-
-import java.io.Serializable;
 
 /**
  * Created by ajoshi on 12-Sep-16.
@@ -16,9 +13,31 @@ public class Main {
     public static void main(String[] args) {
         SessionFactory sessionFactory = HibernateConfigurator.getSessionFactory();
         Session session = sessionFactory.openSession();
-
+        session.beginTransaction();
+        testInheritance(session);
+        session.getTransaction().commit();
         session.close();
         sessionFactory.close();
+    }
+
+    private static void saveUser(Session session) {
+        User user = new User();
+        user.setName("artur joshi");
+        session.save(user);
+        session.flush();
+    }
+
+    private static void testInheritance(Session session) {
+        CreditCard creditCard = new CreditCard();
+        creditCard.setOwner("ajoshi");
+        creditCard.setNumber("12321");
+
+        BankAccount bankAccount = new BankAccount();
+        bankAccount.setOwner("ajoshi");
+        bankAccount.setAccount("account");
+        session.save(creditCard);
+        session.save(bankAccount);
+        session.flush();
     }
 
 //    private static void testSimpleEntitySaving(Session session) {

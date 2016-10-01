@@ -127,3 +127,90 @@ It is also useful for immutable classes
 
 #### Making an entity immutable
 Just put `@Immutable` annotation under the entity. It will entail avoiding dirty checking, for example.
+
+To exclude field from entity you can mark property with the `@Transient` annotation or use `transient` keyword
+
+If a property of persistent class isn't annotated, the following rules apply:
+* If the property of a JDK type, it's automatically persistent;
+* Otherwise, if the class of the property is annotated as `@Embeddable`, it's mapped as a component of the owning class;
+* Otherwise, if the type of the property is `Serializable` its value is stored in its serialized form. It's usually not you want!
+
+To customize this rules apply the `@Basic` annotation
+
+#### Customizing property access
+* If `AccessType` is set on the class level, all attributes of the class are accessed according to the selected strategy.
+* If an entity defaults or is explicitly set for field access, the `AccessType("property")` annotation on a field switches this particular attribute to runtime access through property getter/setter methods. The position of the `AccessType` annotation is still the field.
+* If an entity defaults or is explicitly set for property access, the `AccessType("field")` annotation on a getter method switches this particular attribute to runtime access through a field of the same name. The position of the `AccessType` annotation is still the getter method.
+* Any `@Embedded` class inherits the default or explicitly declared access strategy of the owning root entity class.
+* Any `@MappedSuperclass` properties are accessed with the default or explicitly declared access strategy of the mapped entity class.
+
+#### Using derived properties
+```
+@org.hibernate.annotations.Formula("TOTAL + TAX_RATE * TOTAL")
+public BigDecimal getTotalIncludingTax() {
+    return totalIncludingTax;
+}
+```
+
+#### Generated and default property values
+```
+@Column(updatable = false, insertable = false)
+@org.hibernate.annotations.Generated(
+ org.hibernate.annotations.GenerationTime.ALWAYS
+)
+private Date lastModified;
+```
+
+```
+@Column(name = "INITIAL_PRICE",
+ columnDefinition = "number(10,2) default '1'")
+@org.hibernate.annotations.Generated(
+ org.hibernate.annotations.GenerationTime.INSERT
+)
+private BigDecimal initalPrice;
+```
+
+#### Annotating embedded classes
+[Mapping example(Address and User classes)](src/main/java/app/book/entities/)
+
+### Mapping class inheritance
+There are four different approaches to representing an inheritance hierarchy:
+* Table per concrete class with implicit polymorphism—Use no explicit inheritance mapping, and default runtime polymorphic behavior.
+* Table per concrete class—Discard polymorphism and inheritance relationships completely from the SQL schema
+* Table per class hierarchy—Enable polymorphism by denormalizing the SQL schema, and utilize a type discriminator column that holds type information.
+* Table per subclass—Represent is a (inheritance) relationships as has a (foreign key) relationships. 
+
+#### _Table per class with implicit polymorphism_
+You can use exactly one table for each (nonabstract) class. All properties of a class, including inherited properties, can be mapped to columns of this table, as shown in figure.
+![alt tag](readmeImgs/implicitPolymorphism.png)
+
+The main problem with this approach is that it doesn’t support polymorphic associations very well. In the database, associations are usually represented as foreign key relationships. In figure 5.1, if the subclasses are all mapped to different tables, a polymorphic association to their superclass (abstract BillingDetails in this example) can’t be represented as a simple foreign key relationship. This would be problematic in our domain model, because BillingDetails is associated with User; both subclass tables would need a foreign key reference to the USERS table. Or, if User had a many-to-one relationship with BillingDetails, the USERS table would need a single foreign key column, which would have to refer both concrete subclass tables. This isn’t possible with regular foreign key constraints. 
+
+[Mapping example(Address and User classes)](src/main/java/app/book/entities/inheritanceexamples/implicitpolymorphism)
+
+#### _Table per concrete class with unions_
+1. An abstract superclass or an interface has to be declared as abstract="true"; otherwise
+a separate table for instances of the superclass is needed.
+2. The database identifier mapping is shared for all concrete classes in the hierarchy.
+The CREDIT_CARD and the BANK_ACCOUNT tables both have a BILLING_DETAILS_ID
+primary key column. The database identifier property now has to be shared for all
+subclasses; hence you have to move it into BillingDetails and remove it from
+CreditCard and BankAccount.
+3. Properties of the superclass (or interface) are declared here and inherited by all
+concrete class mappings. This avoids duplication of the same mapping.
+4. A concrete subclass is mapped to a table; the table inherits the superclass (or
+interface) identifier and other property mappings. 
+
+[Mapping example(Address and User classes)](src/main/java/app/book/entities/inheritanceexamples/tableperclass)
+
+#### _Table per class hierarchy_
+![alt tag](readmeImgs/tableHierarchy.png)
+There is one major problem: Columns for properties declared by subclasses must be declared to be nullable.
+[Mapping example(Address and User classes)](src/main/java/app/book/entities/inheritanceexamples/tableperclasshierarchy)
+
+Also you can write `@DiscriminatorFormula` instead of `@DiscriminatorValue` in subclasses:
+```
+@org.hibernate.annotations.DiscriminatorFormula(
+ "case when CC_NUMBER is not null then 'CC' else 'BA' end"
+)
+```
