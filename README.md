@@ -1,5 +1,28 @@
 # Hibernate notes
-[hibernate-type-system](#hibernate-type-system) 
+
+### Table of contents
+1. [Mapping persistent classes](#mapping-persistent-classes) 
+    * [Entities and value types](#entities-values-types) 
+        + [Hibernate types](#hibernate-types) 
+    * [Mapping entities with identity](#mapping-entities-identity) 
+        + [Id generators](#id-generators) 
+    * [Class mapping options](#class-mapping-options) 
+        + [Dynamic SQL generation](#dynamic-sql-generation) 
+        + [Making an entity immutable](#immutable-entity) 
+        + [Customizing property access](#property-access) 
+        + [Using derived properties](#derived-properties) 
+        + [Generated and default property values](#generated-default-property-values) 
+        + [Annotating embedded classes](#annotating-embedded-classes) 
+2. [Mapping class inheritance and custom types](#mapping-class-inheritance-and-custom-types) 
+    * [Mapping class inheritance](#mapping-class-inheritance) 
+        + [Table per class with implicit polymorphism](#table-per-class-with-implicit-polymorphism) 
+        + [Table per concrete class with unions](#table-per-concrete-class) 
+        + [Table per class hierarchy](#table-per-class-hierarchy) 
+        + [Table per subclass](#table-per-subclass) 
+        + [Mixing inheritance strategies](#"mixing-inheritance-strategies) 
+        + [Choosing a strategy](#choosing-strategy) 
+    * [The Hibernate type system](#hibernate-type-system)
+    
 Hibernate (and JPA) require a constructor with no arguments for every persistent class. Hibernate calls persistent classes using Reflection API to init objects.
 Constructor may be non public, but it has to be at least package-visible. Proxy generation also requires that the class isn't declared final
 Hibernate requires interfaces for collection-typed attributes
@@ -61,10 +84,13 @@ Object[] propertyValues =
  meta.getPropertyValues(item, EntityMode.POJO);
  ```
 
-## Mapping persistent classes(#mapping-persistent-classes)
+<a name="mapping-persistent-classes"/>
+## Mapping persistent classes
 
+<a name="entities-values-types"/>
 ### Entities and value types
 
+<a name="hibernate-types"/>
 #### Hibernate types
 Hibernate categorizes types into two groups:
 * Value types
@@ -83,9 +109,10 @@ As the next step you should care about three things:
 * _Lifecycle dependencies_: As discussed, the lifecycle of a value-type instance is bound to that of its owning entity instance. If a User object is deleted, its `Address` dependent object(s) have to be deleted as well.
 * _Identity_: Entity classes need an identifier property in almost all cases. User-defined value-type classes (and JDK classes) don’t have an identifier property, because instances are identified through the owning entity.
 
+<a name="mapping-entities-identity"/>
 ### Mapping entities with identity
 
-
+<a name="id-generators"/>
 #### Id generators
 | Generator name | JPA GenerationType | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 |----------------|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -127,13 +154,16 @@ class name MyEntity {
 
 To create own identifier generator `IdentifierGenerator` interface should be implemented
  
+<a name="class-mapping-options"/>
 ### Class mapping options
  
+ <a name="dynamic-sql-generation"/>
 #### Dynamic SQL generation
 In some situations, such as a legacy table with hundreds of columns where the SQL statements will be large for even the simplest operations (say, only one column needs updating), you have to turn off this startup SQL generation and switch to dynamic statements generated at runtime.
 To disable dynamic insertion/updating you have to use `@DynamicInsert` and `@DynamicUpdate` annotations
 It is also useful for immutable classes
 
+<a name="immutable-entity"/>
 #### Making an entity immutable
 Just put `@Immutable` annotation under the entity. It will entail avoiding dirty checking, for example.
 
@@ -146,6 +176,7 @@ If a property of persistent class isn't annotated, the following rules apply:
 
 To customize this rules apply the `@Basic` annotation
 
+<a name="property-access"/>
 #### Customizing property access
 * If `AccessType` is set on the class level, all attributes of the class are accessed according to the selected strategy.
 * If an entity defaults or is explicitly set for field access, the `AccessType("property")` annotation on a field switches this particular attribute to runtime access through property getter/setter methods. The position of the `AccessType` annotation is still the field.
@@ -153,6 +184,7 @@ To customize this rules apply the `@Basic` annotation
 * Any `@Embedded` class inherits the default or explicitly declared access strategy of the owning root entity class.
 * Any `@MappedSuperclass` properties are accessed with the default or explicitly declared access strategy of the mapped entity class.
 
+<a name="derived-properties"/>
 #### Using derived properties
 ```
 @org.hibernate.annotations.Formula("TOTAL + TAX_RATE * TOTAL")
@@ -161,6 +193,7 @@ public BigDecimal getTotalIncludingTax() {
 }
 ```
 
+<a name="generated-default-property-values"/>
 #### Generated and default property values
 ```
 @Column(updatable = false, insertable = false)
@@ -179,11 +212,14 @@ private Date lastModified;
 private BigDecimal initalPrice;
 ```
 
+<a name="annotating-embedded-classes"/>
 #### Annotating embedded classes
 [Mapping example(Address and User classes)](src/main/java/app/book/entities/)
 
+<a name="mapping-class-inheritance-and-custom-types"/>
 ## Mapping class inheritance and custom types
 
+<a name="mapping-class-inheritance"/>
 ### Mapping class inheritance
 There are four different approaches to representing an inheritance hierarchy:
 * Table per concrete class with implicit polymorphism—Use no explicit inheritance mapping, and default runtime polymorphic behavior.
@@ -191,6 +227,7 @@ There are four different approaches to representing an inheritance hierarchy:
 * Table per class hierarchy—Enable polymorphism by denormalizing the SQL schema, and utilize a type discriminator column that holds type information.
 * Table per subclass—Represent is a (inheritance) relationships as has a (foreign key) relationships. 
 
+<a name="table-per-class-with-implicit-polymorphism"/>
 #### _Table per class with implicit polymorphism_
 You can use exactly one table for each (nonabstract) class. All properties of a class, including inherited properties, can be mapped to columns of this table, as shown in figure.
 ![alt tag](readmeImgs/implicitPolymorphism.png)
@@ -199,6 +236,7 @@ The main problem with this approach is that it doesn’t support polymorphic ass
 
 [Mapping example(Address and User classes)](src/main/java/app/book/entities/inheritanceexamples/implicitpolymorphism)
 
+<a name="table-per-concrete-class"/>
 #### _Table per concrete class with unions_
 1. An abstract superclass or an interface has to be declared as abstract="true"; otherwise
 a separate table for instances of the superclass is needed.
@@ -214,6 +252,7 @@ interface) identifier and other property mappings.
 
 [Mapping example(Address and User classes)](src/main/java/app/book/entities/inheritanceexamples/tableperclass)
 
+<a name="table-per-class-hierarchy"/>
 #### _Table per class hierarchy_
 ![alt tag](readmeImgs/tableHierarchy.png)
 
@@ -227,10 +266,12 @@ Also you can write `@DiscriminatorFormula` instead of `@DiscriminatorValue` in s
 )
 ```
 
+<a name="table-per-subclass"/>
 #### _Table per subclass_
 The fourth option is to represent inheritance relationships as relational foreign key associations. Every class/subclass that declares persistent properties—including abstract classes and even interfaces—has its own table.
 ![alt tag](readmeImgs/tablePerSubclass.jpg)
 
+<a name="mixing-inheritance-strategies"/>
 #### _Mixing inheritance strategies_
 ![alt tag](readmeImgs/breakingSubclass.jpg)
 ```
@@ -249,6 +290,7 @@ public class CreditCard extends BillingDetails {
 }
 ```
 
+<a name="choosing-strategy"/>
 #### Choosing a strategy
 * If you don’t require polymorphic associations or queries, lean toward tableper-concrete-class—in other words, if you never or rarely query for BillingDetails and you have no class that has an association to BillingDetails (our model has). An explicit UNION-based mapping should be preferred, because (optimized) polymorphic queries and associations will then be possible later. Implicit polymorphism is mostly useful for queries utilizing non-persistence-related interfaces.
 * If you do require polymorphic associations (an association to a superclass, hence to all classes in the hierarchy with dynamic resolution of the concrete class at runtime) or queries, and subclasses declare relatively few properties (particularly if the main difference between subclasses is in their behavior), lean toward table-per-class-hierarchy. Your goal is to minimize the number of nullable columns and to convince yourself (and your DBA) that a denormalized schema won’t create problems in the long run.
