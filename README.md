@@ -299,3 +299,21 @@ By default, choose table-per-class-hierarchy only for simple problems. For more 
 
 <a name="hibernate-type-system"/>
 ### The Hibernate type system
+
+<a name="build-in-mapping-types"/>
+#### Built-in mapping types
+
+| **Mapping type** | **Java type**      | **SQL built-in type** |
+|------------------|--------------------|-----------------------|
+| integer          | int or Integer     | INTEGER               |
+| long             | long or Long       | BIGINT                |
+| short            | short or Short     | SMALLINT              |
+| float            | float or Float     | FLOAT                 |
+| double           | double or Double   | DOUBLE                |
+| big_decimal      | BigDecimal         | NUMERIC               |
+| character        | String             | CHAR(1)               |
+| string           | String             | VARCHAR               |
+| byte             | byte or Byte       | TINYINT               |
+| boolean          | boolean or Boolean | BIT                   |
+| yes_no           | boolean or Boolean | CHAR(1) ('Y' or 'N' ) |
+| true_false       | boolean or Boolean | CHAR(1) ('T' or 'F')  |
