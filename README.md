@@ -1,5 +1,5 @@
 # Hibernate notes
-
+[hibernate-type-system](#hibernate-type-system) 
 Hibernate (and JPA) require a constructor with no arguments for every persistent class. Hibernate calls persistent classes using Reflection API to init objects.
 Constructor may be non public, but it has to be at least package-visible. Proxy generation also requires that the class isn't declared final
 Hibernate requires interfaces for collection-typed attributes
@@ -61,6 +61,10 @@ Object[] propertyValues =
  meta.getPropertyValues(item, EntityMode.POJO);
  ```
 
+## Mapping persistent classes(#mapping-persistent-classes)
+
+### Entities and value types
+
 #### Hibernate types
 Hibernate categorizes types into two groups:
 * Value types
@@ -78,6 +82,9 @@ As the next step you should care about three things:
 * _Shared references_: Write your POJO classes in a way that avoids shared references to value type instances. For example, make sure an `Address` object can be referenced by only one `User`. For example, make it immutable and enforce the relationship with the `Address` constructor
 * _Lifecycle dependencies_: As discussed, the lifecycle of a value-type instance is bound to that of its owning entity instance. If a User object is deleted, its `Address` dependent object(s) have to be deleted as well.
 * _Identity_: Entity classes need an identifier property in almost all cases. User-defined value-type classes (and JDK classes) don’t have an identifier property, because instances are identified through the owning entity.
+
+### Mapping entities with identity
+
 
 #### Id generators
 | Generator name | JPA GenerationType | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -119,6 +126,8 @@ class name MyEntity {
 ```
 
 To create own identifier generator `IdentifierGenerator` interface should be implemented
+ 
+### Class mapping options
  
 #### Dynamic SQL generation
 In some situations, such as a legacy table with hundreds of columns where the SQL statements will be large for even the simplest operations (say, only one column needs updating), you have to turn off this startup SQL generation and switch to dynamic statements generated at runtime.
@@ -173,6 +182,8 @@ private BigDecimal initalPrice;
 #### Annotating embedded classes
 [Mapping example(Address and User classes)](src/main/java/app/book/entities/)
 
+## Mapping class inheritance and custom types
+
 ### Mapping class inheritance
 There are four different approaches to representing an inheritance hierarchy:
 * Table per concrete class with implicit polymorphism—Use no explicit inheritance mapping, and default runtime polymorphic behavior.
@@ -215,3 +226,34 @@ Also you can write `@DiscriminatorFormula` instead of `@DiscriminatorValue` in s
  "case when CC_NUMBER is not null then 'CC' else 'BA' end"
 )
 ```
+
+#### _Table per subclass_
+The fourth option is to represent inheritance relationships as relational foreign key associations. Every class/subclass that declares persistent properties—including abstract classes and even interfaces—has its own table.
+![alt tag](readmeImgs/tablePerSubclass.jpg)
+
+#### _Mixing inheritance strategies_
+![alt tag](readmeImgs/breakingSubclass.jpg)
+```
+@Entity
+@DiscriminatorValue("CC")
+@SecondaryTable(
+ name = "CREDIT_CARD",
+ pkJoinColumns = @PrimaryKeyJoinColumn(name = "CREDIT_CARD_ID")
+)
+public class CreditCard extends BillingDetails {
+ @Column(table = "CREDIT_CARD",
+ name = "CC_NUMBER",
+ nullable = false)
+ private String number;
+ ...
+}
+```
+
+#### Choosing a strategy
+* If you don’t require polymorphic associations or queries, lean toward tableper-concrete-class—in other words, if you never or rarely query for BillingDetails and you have no class that has an association to BillingDetails (our model has). An explicit UNION-based mapping should be preferred, because (optimized) polymorphic queries and associations will then be possible later. Implicit polymorphism is mostly useful for queries utilizing non-persistence-related interfaces.
+* If you do require polymorphic associations (an association to a superclass, hence to all classes in the hierarchy with dynamic resolution of the concrete class at runtime) or queries, and subclasses declare relatively few properties (particularly if the main difference between subclasses is in their behavior), lean toward table-per-class-hierarchy. Your goal is to minimize the number of nullable columns and to convince yourself (and your DBA) that a denormalized schema won’t create problems in the long run.
+* If you do require polymorphic associations or queries, and subclasses declare many properties (subclasses differ mainly by the data they hold), lean toward table-per-subclass. Or, depending on the width and depth of your inheritance hierarchy and the possible cost of joins versus unions, use table-per-concrete-class.
+By default, choose table-per-class-hierarchy only for simple problems. For more complex cases (or when you’re overruled by a data modeler insisting on the importance of nullability constraints and normalization), you should consider the table-per-subclass strategy.
+
+<a name="hibernate-type-system"/>
+### The Hibernate type system

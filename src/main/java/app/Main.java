@@ -1,8 +1,8 @@
 package app;
 
 import app.book.entities.User;
-import app.book.entities.inheritanceexamples.tableperclasshierarchy.BankAccount;
-import app.book.entities.inheritanceexamples.tableperclasshierarchy.CreditCard;
+import app.book.entities.inheritanceexamples.tablepersubclass.BankAccount;
+import app.book.entities.inheritanceexamples.tablepersubclass.CreditCard;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
