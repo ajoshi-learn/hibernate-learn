@@ -394,3 +394,84 @@ private Date startDate;
 ```
 
 In other rare cases, you may want to add the `@org.hibernate.annotations.Type` annotation to a property and declare the name of a built-in or custom Hibernate mapping type explicitly
+
+<a name="custom-mapping-system"/>
+
+### Creating custom mapping types
+
+#### The extension points
+
+Hibernate provides several interfaces that applications may use to define custom mapping types:
+* `org.hibernate.usertype.UserType` provides the basic methods for custom loading and storing of value type instances.
+* `org.hibernate.usertype.CompositeUserType` - an interface with more methods than the basic UserType, used to expose internals about your value type class to Hibernate, such as the individual properties.
+* `org.hibernate.usertype.UserCollectionType` - a rarely needed interface that’s used to implement custom collections.
+* `org.hibernate.usertype.EnhancedUserType` - an interface that extends UserType and provides additional methods for marshalling value types toand from XML representations, or enables a custom mapping type for use in identifier and discriminator mappings.
+* `org.hibernate.usertype.UserVersionType` - an interface that extends UserType and provides additional methods enabling the custom mapping type for usage in entity version mappings.
+* `org.hibernate.usertype.ParameterizedType` - a useful interface that can be combined with all others to provide configuration settings—that is, parameters defined in metadata. For example, you can write a single MoneyConverter that knows how to translate values into Euro or US dollars, depending on a parameter in the mapping.
+
+#### Creating a UserType
+
+In order to create custom UserType you should implement `UserType` interface
+[MonetaryAmountUserType example](src/main/java/app/book/entities/custommappingtypes/usertypes/)
+
+1. The `sqlTypes()` method tells Hibernate what SQL column types to use for DDL schema generation. Notice that this method returns an array of type codes.
+2. The `returnedClass()` method tells Hibernate what Java value type class is mapped by this `UserType`.
+3. The `UserType` is also partially responsible for creating a snapshot of a value in the first place. Because `MonetaryAmount` is an immutable class, the `deepCopy()` method returns its argument. In the case of a mutable type, it would need to return a copy of the argument to be used as the snapshot value.
+4. The `disassemble()` method is called when Hibernate puts a `MonetaryAmount` into the second-level cache. As you’ll learn later, this is a cache of data that stores information in a serialized form.
+5. The `assemble()` method does the opposite of disassembly: It can transform cached data into an instance of MonetaryAmount. As you can see, implementation of both routines is easy for immutable types.
+6. Implement `replace()` to handle merging of detached object state.
+7. The `nullSafeGet()` method retrieves the property value from the JDBC `ResultSet`.
+8. The `nullSafeSet()` method writes the property value to the JDBC `PreparedStatement`.
+
+#### Creating a CompositeUserType
+
+In order to create custom CompositeUserType you should implement `CompositeUserType` interface
+[MonetaryAmountCompositeUserType example](src/main/java/app/book/entities/custommappingtypes/usertypes/)
+
+1. The `CompositeUserType` interface requires the same housekeeping methods as the `UserType`. However, the `sqlTypes()` method is no longer needed.
+2. Loading a value now is straightforward: You transform two column values in the result set to two property values in a new `MonetaryAmount` instance.
+3. Saving a value involves setting two parameters on the prepared statement.
+4. A `CompositeUserType` exposes the properties of the value type through `getPropertyNames()`.
+5. The properties each have their own type, as defined by `getPropertyTypes()`. The types of the SQL columns are now implicit from this method.
+6. The `getPropertyValue()` method returns the value of an individual property of the `MonetaryAmount`.
+7. The `setPropertyValue()` method sets the value of an individual property of the `MonetaryAmount`. 
+
+#### Parameterizing custom types
+[MonetaryAmountConversionType example](src/main/java/app/book/entities/custommappingtypes/usertypes/)
+
+```
+@org.hibernate.annotations.TypeDefs({
+ @org.hibernate.annotations.TypeDef(
+ name="monetary_amount_usd",
+ typeClass = persistence.MonetaryAmountConversionType.class,
+ parameters = { @Parameter(name="convertTo", value="USD") }
+ ),
+ @org.hibernate.annotations.TypeDef(
+ name="monetary_amount_eur",
+ typeClass = persistence.MonetaryAmountConversionType.class,
+ parameters = { @Parameter(name="convertTo", value="EUR") }
+ )
+})
+```
+This annotation metadata is global, so it can be placed outside any Java class declaration (right after the import statements) or in a separate file, package-info.java. A good location in this system is in a package-info.java file in the persistence package.
+
+```
+@org.hibernate.annotations.Type(type = "monetary_amount_eur")
+@org.hibernate.annotations.Columns({
+ @Column(name = "BID_AMOUNT"),
+ @Column(name = "BID_AMOUNT_CUR")
+})
+private MonetaryAmount bidAmount;
+```
+
+#### Mapping enumerations
+
+Instead of the most basic `UserType` interface, we now we will use the `EnhancedUserType` interface.
+First of all you have to write your custom enumeration handler that should implement `EnhancedUserType` and `ParameterizedType` interfaces
+And that map in the entity class:
+
+```
+@Enumerated(EnumType.STRING)
+ @Column(name = "RATING", nullable = false, updatable = false)
+ private Rating rating;
+```

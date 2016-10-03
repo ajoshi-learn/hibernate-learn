@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.Currency;
 import java.util.StringTokenizer;
 
 /**
@@ -35,5 +36,9 @@ public class User {
         StringTokenizer stringTokenizer = new StringTokenizer(name);
         firstname = stringTokenizer.nextToken();
         lastname = stringTokenizer.nextToken();
+    }
+
+    public static Currency getPreferences() {
+        return Currency.getInstance("USD");
     }
 }

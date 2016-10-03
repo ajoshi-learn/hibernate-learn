@@ -1,10 +1,12 @@
 package app.book.entities;
 
+import app.book.entities.custommappingtypes.entities.MonetaryAmount;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.Type;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,16 +19,29 @@ import java.util.Set;
 @Table(name = "ITEM")
 public class Item {
 
+    @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
     private String name;
     private String description;
 
-    private Set<Category> categories = new HashSet<>();
+//    private Set<Category> categories = new HashSet<>();
+//    // UserType
+//    @Type(type = "app.book.entities.custommappingtypes.usertypes.MonetaryAmountUserType")
+//    @Column(name = "INITIAL_PRICE")
 
-    public void addCategory(Category category) {
-        if(category == null) {
-            throw new IllegalArgumentException("Null category");
-        }
-        category.getItems().add(this);
-        categories.add(category);
-    }
+    // CompositeUserType
+    @Type(type = "app.book.entities.custommappingtypes.usertypes.MonetaryAmountCompositeUserType")
+    @Columns(columns = {
+            @Column(name = "INITIAL_PRICE"),
+            @Column(name = "INITIAL_PRICE_CURRENCY")
+    })
+    private MonetaryAmount initialPrice;
+
+//    public void addCategory(Category category) {
+//        if(category == null) {
+//            throw new IllegalArgumentException("Null category");
+//        }
+//        category.getItems().add(this);
+//        categories.add(category);
+//    }
 }

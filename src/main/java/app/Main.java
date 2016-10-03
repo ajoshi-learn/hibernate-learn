@@ -1,10 +1,15 @@
 package app;
 
+import app.book.entities.Item;
 import app.book.entities.User;
+import app.book.entities.custommappingtypes.entities.MonetaryAmount;
 import app.book.entities.inheritanceexamples.tablepersubclass.BankAccount;
 import app.book.entities.inheritanceexamples.tablepersubclass.CreditCard;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+
+import java.math.BigDecimal;
+import java.util.Currency;
 
 /**
  * Created by ajoshi on 12-Sep-16.
@@ -14,7 +19,7 @@ public class Main {
         SessionFactory sessionFactory = HibernateConfigurator.getSessionFactory();
         Session session = sessionFactory.openSession();
         session.beginTransaction();
-        testInheritance(session);
+        testCustomUserType(session);
         session.getTransaction().commit();
         session.close();
         sessionFactory.close();
@@ -38,6 +43,14 @@ public class Main {
         session.save(creditCard);
         session.save(bankAccount);
         session.flush();
+    }
+
+    private static void testCustomUserType(Session session) {
+        Item item = new Item();
+        item.setName("testItem");
+        MonetaryAmount initialPrice = new MonetaryAmount(BigDecimal.TEN, Currency.getInstance("USD"));
+        item.setInitialPrice(initialPrice);
+        session.save(item);
     }
 
 //    private static void testSimpleEntitySaving(Session session) {
