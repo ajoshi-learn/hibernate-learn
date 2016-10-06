@@ -27,7 +27,14 @@
         + [Binary and large value mapping types](#binary-large-mapping-types)
         + [JDK mapping types](#jdk-mapping-types)
         + [Using mapping types](#using-mapping-types)
-    
+    * [Creating custom mapping types](#custom-mapping-system)
+        + [The extension points](#extensions-points)
+        + [Creating a UserType](#creating-user-type)
+        + [Creating a CompositeUserType](#creating-composite-user-type)
+        + [Parameterizing custom types](#parameterizing-custom-type)
+        + [Mapping enumerations](#mapping-enums)
+3. [Mapping collections and entity associations](#mapping-collections-and-entity-associations)
+<hr>
 Hibernate (and JPA) require a constructor with no arguments for every persistent class. Hibernate calls persistent classes using Reflection API to init objects.
 Constructor may be non public, but it has to be at least package-visible. Proxy generation also requires that the class isn't declared final
 Hibernate requires interfaces for collection-typed attributes
@@ -399,6 +406,8 @@ In other rare cases, you may want to add the `@org.hibernate.annotations.Type` a
 
 ### Creating custom mapping types
 
+<a name="extensions-points"/>
+
 #### The extension points
 
 Hibernate provides several interfaces that applications may use to define custom mapping types:
@@ -408,6 +417,8 @@ Hibernate provides several interfaces that applications may use to define custom
 * `org.hibernate.usertype.EnhancedUserType` - an interface that extends UserType and provides additional methods for marshalling value types toand from XML representations, or enables a custom mapping type for use in identifier and discriminator mappings.
 * `org.hibernate.usertype.UserVersionType` - an interface that extends UserType and provides additional methods enabling the custom mapping type for usage in entity version mappings.
 * `org.hibernate.usertype.ParameterizedType` - a useful interface that can be combined with all others to provide configuration settings—that is, parameters defined in metadata. For example, you can write a single MoneyConverter that knows how to translate values into Euro or US dollars, depending on a parameter in the mapping.
+
+<a name="creating-user-type"/>
 
 #### Creating a UserType
 
@@ -423,6 +434,8 @@ In order to create custom UserType you should implement `UserType` interface
 7. The `nullSafeGet()` method retrieves the property value from the JDBC `ResultSet`.
 8. The `nullSafeSet()` method writes the property value to the JDBC `PreparedStatement`.
 
+<a name="creating-composite-user-type"/>
+
 #### Creating a CompositeUserType
 
 In order to create custom CompositeUserType you should implement `CompositeUserType` interface
@@ -436,7 +449,10 @@ In order to create custom CompositeUserType you should implement `CompositeUserT
 6. The `getPropertyValue()` method returns the value of an individual property of the `MonetaryAmount`.
 7. The `setPropertyValue()` method sets the value of an individual property of the `MonetaryAmount`. 
 
+<a name="parameterizing-custom-type"/>
+
 #### Parameterizing custom types
+
 [MonetaryAmountConversionType example](src/main/java/app/book/entities/custommappingtypes/usertypes/)
 
 ```
@@ -464,6 +480,8 @@ This annotation metadata is global, so it can be placed outside any Java class d
 private MonetaryAmount bidAmount;
 ```
 
+<a name="mapping-enums"/>
+
 #### Mapping enumerations
 
 Instead of the most basic `UserType` interface, we now we will use the `EnhancedUserType` interface.
@@ -474,4 +492,103 @@ And that map in the entity class:
 @Enumerated(EnumType.STRING)
  @Column(name = "RATING", nullable = false, updatable = false)
  private Rating rating;
+```
+
+<a name="mapping-collections-and-entity-associations"/>
+
+## Mapping collections and entity associations
+
+### Sets, bags, lists, and maps of value types
+
+Without extending Hibernate you can choose from the following collections:
+* `java.util.Set` is mapped with a `<set>` and initialized with a `HashSet`
+* `java.util.SortedSet` is mapped with a `<set>` and initialized with a `TreeSet`
+* `java.util.List` is mapped with a `<list>` and initialized with a `ArrayList`
+* `java.util.Collection` can be mapped with a `<bag>` or `<idbag>` and initialized with a `ArrayList`
+* `java.util.Map` is mapped with a `<map>` and initialized with a `HashMap`
+* `java.util.SortedMap` is mapped with a `<map>` and initialized with a `TreeMap`
+
+#### Basic collection mapping
+
+The following maps a simple collection of `String` elements:
+```
+@org.hibernate.annotations.CollectionOfElements(
+ targetElement = java.lang.String.class
+)
+@JoinTable(
+ name = "ITEM_IMAGE",
+ joinColumns = @JoinColumn(name = "ITEM_ID")
+)
+@Column(name = "FILENAME", nullable = false)
+private Set<String> images = new HashSet<String>();
+```
+
+To map a persistent `List`, add `@org.hibernate.annotations.IndexColumn` with an optional base for the index (default is zero):
+```
+@org.hibernate.annotations.CollectionOfElements
+@JoinTable(
+ name = "ITEM_IMAGE",
+ joinColumns = @JoinColumn(name = "ITEM_ID")
+)
+@org.hibernate.annotations.IndexColumn(
+ name="POSITION", base = 1
+)
+@Column(name = "FILENAME")
+private List<String> images = new ArrayList<String>();
+```
+If you forget the index column, this list would be treated as a bag collection.
+
+To map a persistent map, use `@org.hibernate.annotations.MapKey`:
+```
+@org.hibernate.annotations.CollectionOfElements
+@JoinTable(
+ name = "ITEM_IMAGE",
+ joinColumns = @JoinColumn(name = "ITEM_ID")
+)
+@org.hibernate.annotations.MapKey(
+ columns = @Column(name="IMAGENAME")
+)
+@Column(name = "FILENAME")
+private Map<String, String> images = new HashMap<String, String>();
+```
+
+#### Sorted and ordered collections
+
+A collection can also be sorted or ordered with Hibernate annotations:
+
+```
+@org.hibernate.annotations.CollectionOfElements
+@JoinTable(
+ name = "ITEM_IMAGE",
+ joinColumns = @JoinColumn(name = "ITEM_ID")
+)
+@Column(name = "FILENAME", nullable = false)
+@org.hibernate.annotations.Sort(
+ type = org.hibernate.annotations.SortType.NATURAL
+)
+private SortedSet<String> images = new TreeSet<String>();
+```
+The @Sort annotation supports various SortType attributes, with the same semantics as the XML mapping options. The shown mapping uses a java.util.SortedSet (with a java.util.TreeSet implementation) and natural sort order. If you enable SortType. COMPARATOR, you also need to set the comparator attribute to a class that implements your comparison routine.
+
+Maps, sets, and even bags, can be ordered on load, by the database, through an SQL fragment in the ORDER BY clause:
+```
+@org.hibernate.annotations.OrderBy(
+ clause = "FILENAME asc"
+)
+```
+
+Finally, you can map a collection of components, of user-defined value-typed elements. You need to add the `@Embeddable` component annotation on that class to enable embedding:
+```
+@Embeddable
+public class Image {
+ @org.hibernate.annotations.Parent
+ Item item;
+ @Column(length = 255, nullable = false)
+ private String name;
+ @Column(length = 255, nullable = false)
+ private String filename;
+ @Column(nullable = false)
+ private int sizeX;
+ @Column(nullable = false)
+ private int sizeY;
 ```
