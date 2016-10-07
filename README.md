@@ -591,4 +591,33 @@ public class Image {
  private int sizeX;
  @Column(nullable = false)
  private int sizeY;
+ @org.hibernate.annotations.CollectionOfElements
+ @JoinTable(
+  name = "ITEM_IMAGE",
+  joinColumns = @JoinColumn(name = "ITEM_ID")
+ )
+ @AttributeOverride(
+  name = "element.name",
+  column = @Column(name = "IMAGENAME",
+  length = 255,
+  nullable = false)
+ )
+ private Set<Image> images = new HashSet<Image>();
 ```
+
+### Mapping a parent-child relationship
+
+#### The simplest possible association
+[BidItem example](src/main/java/app/book/entities/associationsexamples/entities)
+
+`targetEntity` annotation parameter is used to set type explicitly. An explicit `targetEntity` attribute is useful in more complex domain models - for example, when you map a `@ManyToOne` on a getter method that returns a delegate class, which mimics a particular target entity interface.
+`@JoinColumn` is also os optional. If it isn't defined, column name will be `<type>_id`
+
+#### Cascading object state
+
+**Transitive persistence**
+To implement transitive persistence you have to put `cascade` parameter into `@OneToMany` annotation
+
+[BidItem example](src/main/java/app/book/entities)
+
+Same can be applied for deletion
