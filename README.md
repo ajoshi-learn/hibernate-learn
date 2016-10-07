@@ -34,6 +34,12 @@
         + [Parameterizing custom types](#parameterizing-custom-type)
         + [Mapping enumerations](#mapping-enums)
 3. [Mapping collections and entity associations](#mapping-collections-and-entity-associations)
+    * [Sets, bags, lists, and maps of value types](#sets-bags-lists-maps)
+        + [Basic collection mapping](#basic-collection-mapping)
+        + [Sorted and ordered collections](#sorted-and-ordered-collections)
+    * [Mapping a parent-child relationship](#mapping-parent-child-associations)
+        + [The simplest possible association](#simplest-association)
+        + [Cascading object state](#cascading-object-state)
 <hr>
 Hibernate (and JPA) require a constructor with no arguments for every persistent class. Hibernate calls persistent classes using Reflection API to init objects.
 Constructor may be non public, but it has to be at least package-visible. Proxy generation also requires that the class isn't declared final
@@ -498,6 +504,8 @@ And that map in the entity class:
 
 ## Mapping collections and entity associations
 
+<a name="sets-bags-lists-maps"/>
+
 ### Sets, bags, lists, and maps of value types
 
 Without extending Hibernate you can choose from the following collections:
@@ -507,6 +515,8 @@ Without extending Hibernate you can choose from the following collections:
 * `java.util.Collection` can be mapped with a `<bag>` or `<idbag>` and initialized with a `ArrayList`
 * `java.util.Map` is mapped with a `<map>` and initialized with a `HashMap`
 * `java.util.SortedMap` is mapped with a `<map>` and initialized with a `TreeMap`
+
+<a name="basic-collection-mapping"/>
 
 #### Basic collection mapping
 
@@ -551,6 +561,8 @@ To map a persistent map, use `@org.hibernate.annotations.MapKey`:
 @Column(name = "FILENAME")
 private Map<String, String> images = new HashMap<String, String>();
 ```
+
+<a name="sorted-and-ordered-collections"/>
 
 #### Sorted and ordered collections
 
@@ -605,13 +617,19 @@ public class Image {
  private Set<Image> images = new HashSet<Image>();
 ```
 
+<a name="mapping-parent-child-associations"/>
+
 ### Mapping a parent-child relationship
+
+<a name="simplest-association"/>
 
 #### The simplest possible association
 [BidItem example](src/main/java/app/book/entities/associationsexamples/entities)
 
 `targetEntity` annotation parameter is used to set type explicitly. An explicit `targetEntity` attribute is useful in more complex domain models - for example, when you map a `@ManyToOne` on a getter method that returns a delegate class, which mimics a particular target entity interface.
 `@JoinColumn` is also os optional. If it isn't defined, column name will be `<type>_id`
+
+<a name="cascading-object-state"/>
 
 #### Cascading object state
 
