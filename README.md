@@ -40,6 +40,7 @@
     * [Mapping a parent-child relationship](#mapping-parent-child-associations)
         + [The simplest possible association](#simplest-association)
         + [Cascading object state](#cascading-object-state)
+        
 <hr>
 Hibernate (and JPA) require a constructor with no arguments for every persistent class. Hibernate calls persistent classes using Reflection API to init objects.
 Constructor may be non public, but it has to be at least package-visible. Proxy generation also requires that the class isn't declared final
