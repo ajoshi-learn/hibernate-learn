@@ -1,7 +1,8 @@
 package app;
 
 import app.book.entities.Item;
-import app.book.entities.User;
+import app.book.entities.advancedmappingsexamples.Address;
+import app.book.entities.advancedmappingsexamples.User;
 import app.book.entities.custommappingtypes.entities.MonetaryAmount;
 import app.book.entities.inheritanceexamples.tablepersubclass.BankAccount;
 import app.book.entities.inheritanceexamples.tablepersubclass.CreditCard;
@@ -19,18 +20,18 @@ public class Main {
         SessionFactory sessionFactory = HibernateConfigurator.getSessionFactory();
         Session session = sessionFactory.openSession();
         session.beginTransaction();
-        testCustomUserType(session);
+        testOneToOneAssociation(session);
         session.getTransaction().commit();
         session.close();
         sessionFactory.close();
     }
 
-    private static void saveUser(Session session) {
-        User user = new User();
-        user.setName("artur joshi");
-        session.save(user);
-        session.flush();
-    }
+//    private static void saveUser(Session session) {
+//        User user = new User();
+//        user.setName("artur joshi");
+//        session.save(user);
+//        session.flush();
+//    }
 
     private static void testInheritance(Session session) {
         CreditCard creditCard = new CreditCard();
@@ -51,6 +52,17 @@ public class Main {
         MonetaryAmount initialPrice = new MonetaryAmount(BigDecimal.TEN, Currency.getInstance("USD"));
         item.setInitialPrice(initialPrice);
         session.save(item);
+    }
+
+    private static void testOneToOneAssociation(Session session) {
+        User newUser = new User();
+        newUser.setName("name");
+        Address shippingAddress = new Address();
+        shippingAddress.setAddress("address");
+        newUser.setShippingAddress(shippingAddress);
+        shippingAddress.setUser(newUser); // Bidirectional
+        session.save(shippingAddress);
+        session.save(newUser);
     }
 
 //    private static void testSimpleEntitySaving(Session session) {

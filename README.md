@@ -40,6 +40,7 @@
     * [Mapping a parent-child relationship](#mapping-parent-child-associations)
         + [The simplest possible association](#simplest-association)
         + [Cascading object state](#cascading-object-state)
+4. [Advanced entity association mappings](#advanced-entity-association-mappings)
         
 <hr>
 Hibernate (and JPA) require a constructor with no arguments for every persistent class. Hibernate calls persistent classes using Reflection API to init objects.
@@ -625,6 +626,9 @@ public class Image {
 <a name="simplest-association"/>
 
 #### The simplest possible association
+
+![alt tag](readmeImgs/associations.png)
+
 [BidItem example](src/main/java/app/book/entities/associationsexamples/entities)
 
 `targetEntity` annotation parameter is used to set type explicitly. An explicit `targetEntity` attribute is useful in more complex domain models - for example, when you map a `@ManyToOne` on a getter method that returns a delegate class, which mimics a particular target entity interface.
@@ -640,3 +644,40 @@ To implement transitive persistence you have to put `cascade` parameter into `@O
 [BidItem example](src/main/java/app/book/entities)
 
 Same can be applied for deletion
+
+<a name="advanced-entity-association-mappings"/>
+
+## Advanced entity association mappings](#advanced-entity-association-mappings
+
+### Single-valued entity associations
+
+![alt tag](readmeImgs/onetoone.png)
+
+#### One-to-one foreign key associations
+
+```
+@Entity
+@Table(name = "addresses")
+public class Address {
+    @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
+    @OneToOne(mappedBy = "shippingAddress")
+    private User user;
+    @Column(name = "address")
+    private String address;
+}
+```
+
+```
+@Entity
+@Table(name = "users")
+public class User {
+    @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_id")
+    private Address shippingAddress;
+    @Column(name = "user_name")
+    private String name;
+}
+```
