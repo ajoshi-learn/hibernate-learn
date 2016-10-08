@@ -41,6 +41,9 @@
         + [The simplest possible association](#simplest-association)
         + [Cascading object state](#cascading-object-state)
 4. [Advanced entity association mappings](#advanced-entity-association-mappings)
+    * [Single-valued entity associations](#single-valued-associations)
+        + [One-to-one foreign key associations](#one-to-one-foreign)
+        + [One-to-one with join table](#one-to-one-jointable)
         
 <hr>
 Hibernate (and JPA) require a constructor with no arguments for every persistent class. Hibernate calls persistent classes using Reflection API to init objects.
@@ -649,9 +652,13 @@ Same can be applied for deletion
 
 ## Advanced entity association mappings
 
+<a name="single-valued-associations"/>
+
 ### Single-valued entity associations
 
 ![alt tag](readmeImgs/onetoone.png)
+
+<a name="one-to-one-foreign"/>
 
 #### One-to-one foreign key associations
 
@@ -681,6 +688,8 @@ public class User {
     private String name;
 }
 ```
+
+<a name="one-to-one-jointable"/>
 
 #### One-to-one with join table
 
