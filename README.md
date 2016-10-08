@@ -647,7 +647,7 @@ Same can be applied for deletion
 
 <a name="advanced-entity-association-mappings"/>
 
-## Advanced entity association mappings](#advanced-entity-association-mappings
+## Advanced entity association mappings
 
 ### Single-valued entity associations
 
@@ -679,5 +679,21 @@ public class User {
     private Address shippingAddress;
     @Column(name = "user_name")
     private String name;
+}
+```
+
+#### One-to-one with join table
+
+![alt tag](readmeImgs/onetoonejointable.png)
+
+```
+public class Shipment {
+ @OneToOne
+ @JoinTable(
+ name="ITEM_SHIPMENT",
+ joinColumns = @JoinColumn(name = "SHIPMENT_ID"),
+ inverseJoinColumns = @JoinColumn(name = "ITEM_ID")
+ )
+ private Item auction;
 }
 ```
