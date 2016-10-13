@@ -44,6 +44,11 @@
     * [Single-valued entity associations](#single-valued-associations)
         + [One-to-one foreign key associations](#one-to-one-foreign)
         + [One-to-one with join table](#one-to-one-jointable)
+    * [Many-valued entity associations](#many-valued-associations)
+        + [One-to-many associations](#one-to-many-associations)
+        + [Many-to-many associations](#many-to-many-associations)
+        + [Mapping maps](#mapping-maps)
+        + [Ternary associations](#ternary-associations)
         
 <hr>
 Hibernate (and JPA) require a constructor with no arguments for every persistent class. Hibernate calls persistent classes using Reflection API to init objects.
@@ -706,3 +711,74 @@ public class Shipment {
  private Item auction;
 }
 ```
+
+<a name="many-valued-associations"/>
+
+### Many-valued entity associations
+
+<a name="one-to-many-associations"/>
+
+#### One-to-many associations
+
+One-to-many relation is mapped by `@OneToMany` and `@ManyToOne` annotations. In order to specify join column use `@JoinColumn` annotation
+[Mapping example](src/main/java/app/book/entities/manyvaluedexamples)
+
+It is also possible to map one-to-many relationship via additional table:
+
+```
+@Entity
+public class Item {
+ @ManyToOne
+ @JoinTable(
+ name = "ITEM_BUYER",
+ joinColumns = {@JoinColumn(name = "ITEM_ID")},
+ inverseJoinColumns = {@JoinColumn(name = "USER_ID")}
+ )
+ private User buyer;
+ ...
+}
+```
+
+<a name="many-to-many-associations"/>
+
+#### Many-to-many associations
+
+[Mapping example](src/main/java/app/book/entities/manyvaluedexamples)
+
+<a name="mapping-maps"/>
+
+#### Mapping maps
+
+```
+@MapKey(name="id")
+@OneToMany
+private Map<Long,Bid> bidsByIdentifier = new HashMap<Long,Bid>();
+```
+
+<a name="ternary-associations"/>
+
+#### Ternary associations
+
+![alt tag](readmeImgs/onetoonejointable.png)
+
+```
+@ManyToMany
+@org.hibernate.annotations.MapKeyManyToMany(
+ joinColumns = @JoinColumn(name = "ITEM_ID")
+)
+@JoinTable(
+ name = "CATEGORY_ITEM",
+ joinColumns = @JoinColumn(name = "CATEGORY_ID"),
+ inverseJoinColumns = @JoinColumn(name = "USER_ID")
+)
+private Map<Item,User> itemsAndUser = new HashMap<Item,User>();
+```
+
+To create a link between all three entities, if all your instances are already in persistent
+state, add a new entry to the map:
+
+```
+aCategory.getItemsAndUser().add( anItem, aUser );
+```
+
+To remove the link, remove the entry from the map. 
