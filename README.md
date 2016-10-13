@@ -759,7 +759,7 @@ private Map<Long,Bid> bidsByIdentifier = new HashMap<Long,Bid>();
 
 #### Ternary associations
 
-![alt tag](readmeImgs/onetoonejointable.png)
+![alt tag](readmeImgs/ternary.png)
 
 ```
 @ManyToMany
