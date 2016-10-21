@@ -812,20 +812,33 @@ _Detached_ state is an object state after closing persistent context, indicating
 They still contain persistent data (which may soon be stale). You can continue working with a detached object and modify it. However, at some point you probably want to make those changes persistent—in other words, bring the detached instance back into persistent state.
 Hibernate offers two operations, _reattachment_ and _merging_, to deal with this situation. Java Persistence only standardizes merging. These features have a deep impact on how multitiered applications may be designed. The ability to return objects from one persistence context to the presentation layer and later reuse them in a new persistence context is a main selling point of Hibernate and Java Persistence. It enables you to create _long_ units of work that span user think-time. We call this kind of long-running unit of work a _conversation_.
 
-### The persistence context
+#### The persistence context
 
 You may consider the persistence context to be a cache of managed entity instances. The persistence context isn’t something you see in your application; it isn’t an API you can call. In a Hibernate application, we say that one `Session` has one internal persistence context. In a Java Persistence application, an `EntityManager` has a persistence context. All entities in persistent state and managed in a unit of work are cached in this context.
 
-#### Automatic dirty checking
+##### Automatic dirty checking
 
 Persistent instances are managed in a persistence context—their state is synchronized with the database at the end of the unit of work. When a unit of work completes, state held in memory is propagated to the database by the execution of SQL INSERT, UPDATE, and DELETE statements (DML). This procedure may also occur at other times. For example, Hibernate may synchronize with the database before execution of a query. This ensures that queries are aware of changes made earlier during the unit of work.
 Hibernate doesn’t update the database row of every single persistent object in memory at the end of the unit of work. ORM software must have a strategy for detecting which persistent objects have been modified by the application. We call this automatic dirty checking. An object with modifications that have not yet been propagated to the database is considered dirty. Again, this state isn’t visible to the application. With transparent transaction-level write-behind, Hibernate propagates state changes to the database as late as possible but hides this detail from the application. By executing DML as late as possible (toward the end of the database transaction), Hibernate tries to keep lock-times in the database as short as possible. (DML usually creates locks in the database that are held until the transaction completes.)
 Hibernate is able to detect exactly which properties have been modified so that it’s possible to include only the columns that need updating in the SQL UPDATE statement. This may bring some performance gains. However, it’s usually not a significant difference and, in theory, could harm performance in some environments.
 
-#### The persistence context cache
+##### The persistence context cache
 
 A persistence context is a cache of persistent entity instances. This means it remembers all persistent entity instances you’ve handled in a particular unit of work. Automatic dirty checking is one of the benefits of this caching. Another benefit is _repeatable read_ for entities and the performance advantage of a unit of work-scoped cache.
 The persistence context cache sometimes helps avoid unnecessary database traffic; but, more important, it ensures that:
-    * The persistence layer isn’t vulnerable to stack overflows in the case of circular references in a graph of objects
-    * There can never be conflicting representations of the same database row at the end of a unit of work. In the persistence context, at most a single object represents any database row. All changes made to that object may be safely written to the database.
-     * Likewise, changes made in a particular persistence context are always immediately visible to all other code executed inside that persistence context and its unit of work (the repeatable read for entities guarantee). 
+* The persistence layer isn’t vulnerable to stack overflows in the case of circular references in a graph of objects
+* There can never be conflicting representations of the same database row at the end of a unit of work. In the persistence context, at most a single object represents any database row. All changes made to that object may be safely written to the database.
+* Likewise, changes made in a particular persistence context are always immediately visible to all other code executed inside that persistence context and its unit of work (the repeatable read for entities guarantee). 
+
+### Object identity and equality
+
+There are two strategies to implement Hibernate conversation:
+
+* with detached objects
+![alt tag](readmeImgs/detachedObjects.png)
+The _detached_ object state and the already mentioned features of reattachment or merging are ways to implement a conversation. Objects are held in detached state during user think-time, and any modification of these objects is made persistent manually through reattachment or merging. This strategy is also called _session-perrequest-with-detached-objects_
+
+* extending persistence context
+![alt tag](readmeImgs/extendingPersistenceContext.png)
+
+#### 
