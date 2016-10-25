@@ -841,4 +841,177 @@ The _detached_ object state and the already mentioned features of reattachment o
 * extending persistence context
 ![alt tag](readmeImgs/extendingPersistenceContext.png)
 
-#### 
+#### The scope of object identity
+
+Example:
+
+```
+Session session1 = sessionFactory.openSession();
+Transaction tx1 = session1.beginTransaction();
+// Load Item with identifier value "1234"
+Object a = session1.get(Item.class, new Long(1234) );
+Object b = session1.get(Item.class, new Long(1234) );
+( a==b ) // True, persistent a and b are identical
+tx1.commit();
+session1.close();
+// References a and b are now to an object in detached state
+Session session2 = sessionFactory.openSession();
+Transaction tx2 = session2.beginTransaction();
+Object c = session2.get(Item.class, new Long(1234) );
+( a==c ) // False, detached a and persistent c are not identical
+tx2.commit();
+session2.close();
+```
+
+### The Hibernate interfaces
+
+The persistence manager may be exposed by several different interfaces. In the case of Hibernate, these are `Session`, `Query`, `Criteria`, and `Transaction`. Under the covers, the implementations of these interfaces are coupled tightly together.
+In Java Persistence, the main interface you interact with is the `EntityManager`; it has the same role as the Hibernate `Session`. Other Java Persistence interfaces are `Query` and `EntityTransaction` (you can probably guess what their counterpart in native Hibernate is). 
+
+#### Storing and loading objects
+
+##### Beginning a unit of work
+
+At the beginning of a unit of work, an application obtains an instance of `Session` from the application’s `SessionFactory`:
+ 
+```
+Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+```
+
+##### Making an object persistent
+```
+Item item = new Item();
+item.setName("Playstation3 incl. all accessories");
+item.setEndDate( ... );
+Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+Serializable itemId = session.save(item);
+tx.commit();
+session.close();
+```
+
+![alt tag](readmeImgs/makingPersistent.png)
+
+##### Retrieving a persistent object
+
+```
+Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+Item item = (Item) session.load(Item.class, new Long(1234));
+// Item item = (Item) session.get(Item.class, new Long(1234));
+tx.commit();
+session.close();
+```
+
+![alt tag](readmeImgs/retrievePersistent.png)
+
+##### Modifying a persistent object
+
+Any persistent object returned by `get()`, `load()`, or any entity queried is already associated with the current Session and persistence context. It can be modified, and its state is synchronized with the database
+
+```
+Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+Item item = (Item) session.get(Item.class, new Long(1234));
+item.setDescription("This Playstation is as good as new!");
+tx.commit();
+session.close();
+```
+
+![alt tag](readmeImgs/modifyPersistent.png)
+
+##### Making a persistent object transient
+
+```
+Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+Item item = (Item) session.load(Item.class, new Long(1234));
+session.delete(item);
+tx.commit();
+session.close();
+```
+
+![alt tag](readmeImgs/makeTransient.png)
+
+##### Replicating objects
+
+```
+Session session = sessionFactory1.openSession();
+Transaction tx = session.beginTransaction();
+Item item = (Item) session.get(Item.class, new Long(1234));
+tx.commit();
+session.close();
+Session session2 = sessionFactory2.openSession();
+Transaction tx2 = session2.beginTransaction();
+session2.replicate(item, ReplicationMode.LATEST_VERSION);
+tx2.commit();
+session2.close();
+```
+
+The ReplicationMode controls the details of the replication procedure:
+* ReplicationMode.IGNORE—Ignores the object when there is an existing database row with the same identifier in the target database.
+* ReplicationMode.OVERWRITE—Overwrites any existing database row with the same identifier in the target database.
+* ReplicationMode.EXCEPTION—Throws an exception if there is an existing database row with the same identifier in the target database.
+* ReplicationMode.LATEST_VERSION—Overwrites the row in the target database if its version is earlier than the version of the object, or ignores the object otherwise. Requires enabled Hibernate optimistic concurrency control.
+ 
+#### Working with detached objects
+
+Modifying the item after the `Session` is closed has no effect on its persistent representation in the database. As soon as the persistence context is closed, item becomes a detached instance. If you want to save modifications you made to a detached object, you have to either _reattach_ or _merge_ it.
+
+##### Reattaching a modified detached instance
+
+A detached instance may be reattached to a new `Session` (and managed by this new persistence context) by calling update() on the detached object. In our experience, it may be easier for you to understand the following code if you rename the `update()` method in your mind to `reattach()` — however, there is a good reason it’s called updating. The `update()` method forces an update to the persistent state of the object in the database, always scheduling an SQL `UPDATE`
+
+It doesn’t matter if the item object is modified before or after it’s passed to `update()`. The important thing here is that the call to `update()` is reattaching the detached instance to the new Session (and persistence context).
+
+![alt tag](readmeImgs/reattachDetached.png)
+
+##### Reattaching an unmodified detached instance
+
+A call to `lock()` associates the object with the Session and its persistence context without forcing an update.
+
+```
+Session sessionTwo = sessionFactory.openSession();
+Transaction tx = sessionTwo.beginTransaction();
+sessionTwo.lock(item, LockMode.NONE);
+item.setDescription(...);
+item.setEndDate(...);
+tx.commit();
+sessionTwo.close();
+```
+
+In this case, it _does_ matter whether changes are made before or after the object has been reattached. Changes made before the call to lock() aren’t propagated to the database, you use it only if you’re sure the detached instance hasn’t been modified. This method only guarantees that the object’s state changes from detached to persistent and that Hibernate will manage the persistent object again. Of course, any modifications you make to the object once it’s in managed persistent state require updating of the database.
+By specifying `LockMode.NONE` here, you tell Hibernate not to perform a version check or obtain any database-level locks when reassociating the object with the Session. If you specified `LockMode.READ`, or `LockMode.UPGRADE`, Hibernate would execute a `SELECT` statement in order to perform a version check (and to lock the row(s) in the database for updating).
+
+##### Merging the state of a detached object
+
+```
+item.getId(); // The database identity is "1234"
+item.setDescription(...);
+Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+Item item2 = (Item) session.get(Item.class, new Long(1234));
+session.update(item); // Throws exception!
+tx.commit();
+session.close();
+```
+
+A persistent instance with the same database identifier is already associated with the Session!
+
+You can let Hibernate merge item and item2 automatically:
+ 
+```
+item.getId() // The database identity is "1234"
+item.setDescription(...);
+Session session= sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+Item item2 = (Item) session.get(Item.class, new Long(1234));
+Item item3 = (Item) session.merge(item);
+(item == item2) // False
+(item == item3) // False
+(item2 == item3) // True
+return item3;
+tx.commit();
+session.close();
+```
