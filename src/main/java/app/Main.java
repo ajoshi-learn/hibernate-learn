@@ -8,6 +8,7 @@ import app.book.entities.inheritanceexamples.tablepersubclass.BankAccount;
 import app.book.entities.inheritanceexamples.tablepersubclass.CreditCard;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 
 import java.math.BigDecimal;
 import java.util.Currency;

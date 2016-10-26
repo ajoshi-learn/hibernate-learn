@@ -1015,3 +1015,150 @@ return item3;
 tx.commit();
 session.close();
 ```
+
+## Transactions and concurrency
+
+### Transaction essentials
+
+Interfaces:
+* `java.sql.Connection` - Plain JDBC transaction demarcation with `setAutoCommit(false)`, `commit()`, and `rollback()`. It can but shouldn't be used in a Hibernate application, because it binds your application to a plain JDBC environment.
+* `org.hibernate.Transaction` - Unified transaction demarcation in Hibernate applications. It works in a nonmanaged plain JDBC environment and also in an application server with JTA as the underlying system transaction service.
+* `javax.transaction.UserTransaction` - Standardized interface for programmatic transaction control in Java; part of JTA. This should be your primary choice whenever you have a JTA-compatible transaction service and want to control transactions programmatically.
+* `javax.persistence.EntityTransaction` - Standardized interface for programmatic transaction control in Java SE applications that use Java Persistence.
+
+#### Transactions in a Hibernate application
+
+##### Programmatic transactions in Java SE
+
+```
+Session session = null;
+Transaction tx = null;
+try {
+ session = sessionFactory.openSession();
+ tx = session.beginTransaction();
+ concludeAuction(session);
+ tx.commit();
+} catch (RuntimeException ex) {
+ tx.rollback();
+} finally {
+ session.close();
+}
+```
+
+##### Transactions with Java Persistence
+
+```
+EntityManager em = null;
+EntityTransaction tx = null;
+try {
+ em = emf.createEntityManager();
+ tx = em.getTransaction();
+ tx.begin();
+ concludeAuction(em);
+ tx.commit();
+} catch (RuntimeException ex) {
+ try {
+ tx.rollback();
+ } catch (RuntimeException rbEx) {
+ log.error("Couldn't roll back transaction", rbEx);
+ }
+ throw ex;
+} finally {
+ em.close();
+}
+```
+
+### Controlling concurrent access
+
+#### Transaction isolation issues
+
+A _lost update_ occurs if two transactions both update a row and then the second transaction aborts, causing both changes to be lost.
+
+![alt tag](readmeImgs/lostUpdate.png)
+
+A _dirty read_ occurs if a one transaction reads changes made by another transaction that has not yet been committed.
+
+![alt tag](readmeImgs/dirtyRead.png)
+
+An _unrepeatable read_ occurs if a transaction reads a row twice and reads different state each time. 
+
+![alt tag](readmeImgs/unrepeatableRead.png)
+
+A _phantom read_ is said to occur when a transaction executes a query twice, and the second result set includes rows that weren’t visible in the first result set or rows that have been deleted.
+ 
+![alt tag](readmeImgs/phantomRead.png)
+
+#### ANSI transaction isolation levels
+
+* A system that permits dirty reads but not lost updates is said to operate in _read uncommitted_ isolation. One transaction may not write to a row if another uncommitted transaction has already written to it. Any transaction may read any row, however. This isolation level may be implemented in the database-management system with exclusive write locks.
+* A system that permits _unrepeatable_ reads but not dirty reads is said to implement read committed transaction isolation. This may be achieved by using shared read locks and exclusive write locks. Reading transactions don’t block other transactions from accessing a row. However, an uncommitted writing transaction blocks all other transactions from accessing the row.
+* A system operating in _repeatable read_ isolation mode permits neither unrepeatable reads nor dirty reads. Phantom reads may occur. Reading transactions block writing transactions (but not other reading transactions), and writing transactions block all other transactions.
+* _Serializable_ provides the strictest transaction isolation. This isolation level emulates serial transaction execution, as if transactions were executed one after another, serially, rather than concurrently. Serializability may not be implemented using only row-level locks. There must instead be some other mechanism that prevents a newly inserted row from becoming visible to a transaction that has already executed a query that would return the row.
+
+#### Setting an isolation level
+
+```
+hibernate.connection.isolation = 4
+```
+* 1 - Read uncommitted isolation
+* 2 - Read committed isolation
+* 4 - Repeatable read isolation
+* 8 - Serializable isolation 
+
+#### Optimistic concurrency control
+
+An optimistic approach always assumes that everything will be OK and that conflicting data modifications are rare. Optimistic concurrency control raises an error only at the end of a unit of work, when data is written.
+
+To understand optimistic concurrency control, imagine that two transactions read a particular object from the database, and both modify it.
+
+![alt tag](readmeImgs/optimistickLockingExample.png)
+
+You have three choices for how to deal with lost updates in these second transactions in the conversations:
+ 
+* _Last commit wins_ - Both transactions commit successfully, and the second commit overwrites the changes of the first. No error message is shown.
+* _First commit wins_ - The transaction of conversation A is committed, and the user committing the transaction in conversation B gets an error message. The user must restart the conversation by retrieving fresh data and go through all steps of the conversation again with nonstale data.
+* _Merge conflicting updates_ - The first modification is committed, and the transaction in conversation B aborts with an error message when it’s committed. The user of the failed conversation B may however apply changes selectively, instead of going through all the work in the conversation again.
+
+If you don’t enable optimistic concurrency control, and by default it isn’t enabled, your application runs with a _last commit_ wins strategy.
+
+##### Versioning with Java Persistence
+
+```
+@Entity
+public class Item {
+ ...
+ @Version
+ @Column(name = "OBJ_VERSION")
+ private int version;
+ ...
+}
+```
+
+#### Obtaining additional isolation guarantees
+
+##### Explicit pessimistic locking
+
+Instead of switching all database transactions into a higher and nonscalable isolation level, you obtain stronger isolation guarantees when necessary with the `lock()` method on the Hibernate Session:
+
+```
+Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+Item i = (Item) session.get(Item.class, 123);
+session.lock(i, LockMode.UPGRADE);
+String description = (String)
+ session.createQuery("select i.description from Item i" +
+ " where i.id = :itemid")
+ .setParameter("itemid", i.getId() )
+ .uniqueResult();
+tx.commit();
+session.close();
+```
+
+**Hibernate lock modes**
+
+* `LockMode.NONE` - Don’t go to the database unless the object isn’t in any cache.
+* `LockMode.READ` - Bypass all caches, and perform a version check to verify that the object in memory is the same version that currently exists in the database.
+* `LockMode.UPDGRADE` - Bypass all caches, do a version check (if applicable), and obtain a database-level pessimistic upgrade lock, if that is supported. Equivalent to LockModeType.READ in Java Persistence. This mode transparently falls back to LockMode.READ if the database SQL dialect doesn’t support a SELECT ... FOR UPDATE option.
+* `LockMode.UPDGRADE_NOWAIT` - The same as UPGRADE, but use a SELECT ... FOR UPDATE NOWAIT, if supported. This disables waiting for concurrent lock releases, thus throwing a locking exception immediately if the lock can’t be obtained. This mode transparently falls back to LockMode.UPGRADE if the database SQL dialect doesn’t support the NOWAIT option.
+* `LockMode.FORCE` - Force an increment of the objects version in the database, to indicate that it has been modified by the current transaction. Equivalent to LockModeType.WRITE in Java Persistence.
+* `LockMode.WRITE` - Obtained automatically when Hibernate has written to a row in the current transaction. (This is an internal mode; you may not specify it in your application.) 
