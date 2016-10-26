@@ -49,6 +49,24 @@
         + [Many-to-many associations](#many-to-many-associations)
         + [Mapping maps](#mapping-maps)
         + [Ternary associations](#ternary-associations)
+5. [Working with objects](#working-with-object)
+    * [The persistence lifecycle](#persistent-lifecycle)
+        + [The persistence context](#persistence-context)
+    * [Object identity and equality](#identity-equality)
+        + [The scope of object identity](#object-identity-scope)
+    * [The Hibernate interfaces](#hibernate-interfaces)
+        + [Storing and loading objects](#objects-storing-loading)
+        + [Working with detached objects](#working-with-detached-objects)
+6. [Transactions and concurrency](#transactions-and-concurrency)
+    * [Transaction essentials](#transactions-essentials)
+        + [Transactions in a Hibernate application](#transactions-in-hibernate)
+    * [Controlling concurrent access](#controlling-concurrent-access)
+        + [Transaction isolation issues](#isolation-issues)
+        + [ANSI transaction isolation levels](#isolation-levels)
+        + [Setting an isolation level](#setting-isolation-level)
+        + [Optimistic concurrency control](#optimistic-concurrency-control)
+        + [Obtaining additional isolation guarantees](#additional-isolation)
+
         
 <hr>
 Hibernate (and JPA) require a constructor with no arguments for every persistent class. Hibernate calls persistent classes using Reflection API to init objects.
@@ -783,8 +801,11 @@ aCategory.getItemsAndUser().add( anItem, aUser );
 
 To remove the link, remove the entry from the map. 
 
+<a name="working-with-object"/>
 
 ## Working with objects
+
+<a name="persistent-lifecycle"/>
 
 ### The persistence lifecycle
 
@@ -812,6 +833,8 @@ _Detached_ state is an object state after closing persistent context, indicating
 They still contain persistent data (which may soon be stale). You can continue working with a detached object and modify it. However, at some point you probably want to make those changes persistent—in other words, bring the detached instance back into persistent state.
 Hibernate offers two operations, _reattachment_ and _merging_, to deal with this situation. Java Persistence only standardizes merging. These features have a deep impact on how multitiered applications may be designed. The ability to return objects from one persistence context to the presentation layer and later reuse them in a new persistence context is a main selling point of Hibernate and Java Persistence. It enables you to create _long_ units of work that span user think-time. We call this kind of long-running unit of work a _conversation_.
 
+<a name="persistence-context"/>
+
 #### The persistence context
 
 You may consider the persistence context to be a cache of managed entity instances. The persistence context isn’t something you see in your application; it isn’t an API you can call. In a Hibernate application, we say that one `Session` has one internal persistence context. In a Java Persistence application, an `EntityManager` has a persistence context. All entities in persistent state and managed in a unit of work are cached in this context.
@@ -830,6 +853,8 @@ The persistence context cache sometimes helps avoid unnecessary database traffic
 * There can never be conflicting representations of the same database row at the end of a unit of work. In the persistence context, at most a single object represents any database row. All changes made to that object may be safely written to the database.
 * Likewise, changes made in a particular persistence context are always immediately visible to all other code executed inside that persistence context and its unit of work (the repeatable read for entities guarantee). 
 
+<a name="identity-equality"/>
+
 ### Object identity and equality
 
 There are two strategies to implement Hibernate conversation:
@@ -840,6 +865,8 @@ The _detached_ object state and the already mentioned features of reattachment o
 
 * extending persistence context
 ![alt tag](readmeImgs/extendingPersistenceContext.png)
+
+<a name="object-identity-scope"/>
 
 #### The scope of object identity
 
@@ -863,10 +890,14 @@ tx2.commit();
 session2.close();
 ```
 
+<a name="hibernate-interfaces"/>
+
 ### The Hibernate interfaces
 
 The persistence manager may be exposed by several different interfaces. In the case of Hibernate, these are `Session`, `Query`, `Criteria`, and `Transaction`. Under the covers, the implementations of these interfaces are coupled tightly together.
 In Java Persistence, the main interface you interact with is the `EntityManager`; it has the same role as the Hibernate `Session`. Other Java Persistence interfaces are `Query` and `EntityTransaction` (you can probably guess what their counterpart in native Hibernate is). 
+
+<a name="objects-storing-loading"/>
 
 #### Storing and loading objects
 
@@ -954,7 +985,9 @@ The ReplicationMode controls the details of the replication procedure:
 * ReplicationMode.OVERWRITE—Overwrites any existing database row with the same identifier in the target database.
 * ReplicationMode.EXCEPTION—Throws an exception if there is an existing database row with the same identifier in the target database.
 * ReplicationMode.LATEST_VERSION—Overwrites the row in the target database if its version is earlier than the version of the object, or ignores the object otherwise. Requires enabled Hibernate optimistic concurrency control.
- 
+
+<a name="working-with-detached-objects"/>
+
 #### Working with detached objects
 
 Modifying the item after the `Session` is closed has no effect on its persistent representation in the database. As soon as the persistence context is closed, item becomes a detached instance. If you want to save modifications you made to a detached object, you have to either _reattach_ or _merge_ it.
@@ -1016,7 +1049,11 @@ tx.commit();
 session.close();
 ```
 
+<a name="transactions-and-concurrency"/>
+
 ## Transactions and concurrency
+
+<a name="transactions-essentials"/>
 
 ### Transaction essentials
 
@@ -1025,6 +1062,8 @@ Interfaces:
 * `org.hibernate.Transaction` - Unified transaction demarcation in Hibernate applications. It works in a nonmanaged plain JDBC environment and also in an application server with JTA as the underlying system transaction service.
 * `javax.transaction.UserTransaction` - Standardized interface for programmatic transaction control in Java; part of JTA. This should be your primary choice whenever you have a JTA-compatible transaction service and want to control transactions programmatically.
 * `javax.persistence.EntityTransaction` - Standardized interface for programmatic transaction control in Java SE applications that use Java Persistence.
+
+<a name="transactions-in-hibernate"/>
 
 #### Transactions in a Hibernate application
 
@@ -1068,7 +1107,11 @@ try {
 }
 ```
 
+<a name="controlling-concurrent-access"/>
+
 ### Controlling concurrent access
+
+<a name="isolation-issues"/>
 
 #### Transaction isolation issues
 
@@ -1088,12 +1131,16 @@ A _phantom read_ is said to occur when a transaction executes a query twice, and
  
 ![alt tag](readmeImgs/phantomRead.png)
 
+<a name="isolation-levels"/>
+
 #### ANSI transaction isolation levels
 
 * A system that permits dirty reads but not lost updates is said to operate in _read uncommitted_ isolation. One transaction may not write to a row if another uncommitted transaction has already written to it. Any transaction may read any row, however. This isolation level may be implemented in the database-management system with exclusive write locks.
 * A system that permits _unrepeatable_ reads but not dirty reads is said to implement read committed transaction isolation. This may be achieved by using shared read locks and exclusive write locks. Reading transactions don’t block other transactions from accessing a row. However, an uncommitted writing transaction blocks all other transactions from accessing the row.
 * A system operating in _repeatable read_ isolation mode permits neither unrepeatable reads nor dirty reads. Phantom reads may occur. Reading transactions block writing transactions (but not other reading transactions), and writing transactions block all other transactions.
 * _Serializable_ provides the strictest transaction isolation. This isolation level emulates serial transaction execution, as if transactions were executed one after another, serially, rather than concurrently. Serializability may not be implemented using only row-level locks. There must instead be some other mechanism that prevents a newly inserted row from becoming visible to a transaction that has already executed a query that would return the row.
+
+<a name="setting-isolation-level"/>
 
 #### Setting an isolation level
 
@@ -1104,6 +1151,8 @@ hibernate.connection.isolation = 4
 * 2 - Read committed isolation
 * 4 - Repeatable read isolation
 * 8 - Serializable isolation 
+
+<a name="optimistic-concurrency-control"/>
 
 #### Optimistic concurrency control
 
@@ -1133,6 +1182,8 @@ public class Item {
  ...
 }
 ```
+
+<a name="additional-isolation"/>
 
 #### Obtaining additional isolation guarantees
 
