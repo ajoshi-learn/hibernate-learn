@@ -78,7 +78,15 @@
     * [Caching in practice](#caching-in-practice)
         + [Selecting a concurrency control strategy](#concurrency-control-strategy)
         + [Controlling the second-level cache](#controlling-second-level-cache)
-    
+8. [Querying with HQL and JPA QL](#querying-with-hql)
+    * [Creating and running queries](#creating-running-queries)
+    * [Basic HQL and JPA QL queries](#basic-hql-queries)
+    * [Joins, reporting queries, and subselects](#joins-reporting-queries)
+9. [Querying with Criteria](#criteria-querying)
+    * [Basic criteria queries](#basic-criteria-queries)
+    * [Using native SQL queries](#native-sql)
+
+
 <hr>
 Hibernate (and JPA) require a constructor with no arguments for every persistent class. Hibernate calls persistent classes using Reflection API to init objects.
 Constructor may be non public, but it has to be at least package-visible. Proxy generation also requires that the class isn't declared final
@@ -1361,3 +1369,270 @@ The available options are as follows:
 * `CacheMode.GET`- Hibernate may read items from the second-level cache,but it won’t add items except to invalidate items when updates occur.
 * `CacheMode.PUT`- Hibernate never reads items from the second-level cache,but it adds items to the cache as it reads them from the database.
 * `CacheMode.REFRESH`- Hibernate never reads items from the second-levelcache, but it adds items to the cache as it reads them from the database. In this mode, the effect of hibernate.cache.use_minimal_puts is bypassed, in order to force a cache refresh in a replicated cluster cache.
+
+<a name="querying-with-hql"/>
+
+## Querying with HQL and JPA QL
+
+<a name="creating-running-queries"/>
+
+### Creating and running queries
+
+**_Creating a query object_**
+
+To create a new Hibernate Query instance, call either createQuery() or createSQLQuery() on a Session. The createQuery() method prepares an HQL query:
+```
+Query hqlQuery = session.createQuery("from User");
+```
+`createSQLQuery()` is used to create an SQL query using the native syntax of the underlying database:
+```
+Query sqlQuery = session.createSQLQuery(
+ "select {user.*} from USERS {user}"
+ ).addEntity("user", User.class);
+```
+To obtain a `Criteria` instance, call `createCriteria()`, passing the class of the objects you want the query to return. This is also called the root entity of the criteria query, the `User` in this example:
+```
+Criteria crit = session.createCriteria(User.class);
+```
+To create a native SQL query, use `createNativeQuery()`:
+```
+Query sqlQuery = session.createNativeQuery(
+ "select u.USER_ID, u.FIRSTNAME, u.LASTNAME from USERS u",
+ User.class
+ );
+```
+
+**_Paging the result_**
+```
+query.setMaxResults(10);
+```
+
+In `Criteria` query, the requested page starts in the middle of the resultset:
+```
+crit.setFirstResult(40);
+```
+
+**_Considering parameter binding_**
+```
+String queryString = "from Item item where item.description like :search";
+Query q = session.createQuery(queryString).setString("search", searchString);
+```
+
+**_Using Hibernate parameter binding_**
+`setString()`, `setDate()` and so on or `setParameter()`
+```
+String queryString = "from Item item"
+ + " where item.seller = :seller and"
+ + " item.description like :desc";
+session.createQuery(queryString)
+ .setParameter( "seller",
+ theSeller,
+ Hibernate.entity(User.class) )
+ .setParameter( "desc", description, Hibernate.STRING );
+```
+
+**_Using positional parameters_**
+```
+String queryString = "from Item item"
+ + " where item.description like ?"
+ + " and item.date > ?";
+Query q = session.createQuery(queryString)
+ .setString(0, searchString)
+ .setDate(1, minDate);
+```
+
+**_Executing a query_**
+`list()`, `getResultList()` and `uniqueResult()`
+
+**_Calling a named query_**
+```
+session.getNamedQuery("findItemsByDescription")
+ .setString("desc", description);
+```
+
+**_Defining a named query with annotations_**
+```
+@NamedQueries({
+ @NamedQuery(
+ name = "findItemsByDescription",
+ query = "select i from Item i where i.description like :desc"
+ ),
+ ...
+})
+@Entity
+@Table(name = "ITEM")
+public class Item { ... }
+```
+
+<a name="basic-hql-queries"/>
+
+### Basic HQL and JPA QL queries
+
+**_Selection_**
+`from Item`
+This query generates the following SQL:
+```
+select i.ITEM_ID, i.NAME, i.DESCRIPTION, ... from ITEM i
+```
+Using aliases
+`from Item as item`
+The as keyword is always optional. The following is equivalent:
+`from Item item`
+
+**_Restriction_**
+`from User u where u.email = 'foo@hibernate.org'`
+
+**_Comparison expressions_**
+```
+from Bid bid where bid.amount between 1 and 10
+from Bid bid where bid.amount > 100
+from User u where u.email in ('foo@bar', 'bar@foo')
+from User u where u.firstname like 'G%'
+```
+
+**_Expressions with collections_**
+```
+from Item i where i.bids is not empty
+from Item i, Category c where i.id = '123' and i member of c.items
+```
+
+**_Ordering query results_**
+```
+from User u order by u.username
+from User u order by u.username desc
+```
+
+**_Getting distinct results_**
+select distinct item.description from Item item
+
+<a name="joins-reporting-queries"/>
+
+### Joins, reporting queries, and subselects
+```
+from Item i
+ join i.bids b
+ where i.description like '%Foo%'
+ and b.amount > 100
+```
+converts to 
+```
+select i.DESCRIPTION, i.INITIAL_PRICE, ...
+ b.BID_ID, b.AMOUNT, b.ITEM_ID, b.CREATED_ON
+from ITEM i
+inner join BID b on i.ITEM_ID = b.ITEM_ID
+where i.DESCRIPTION like '%Foo%'
+and b.AMOUNT > 100
+```
+
+Count:
+```
+Long count =
+ (Long) session.createQuery("select count(i) from Item i")
+ .uniqueResult();
+```
+
+Using subselects:
+```
+from User u where 10 < (
+ select count(i) from u.items i where i.successfulBid is not null
+)
+```
+
+<a name="criteria-querying"/>
+
+## Querying with Criteria
+
+<a name="basic-criteria-queries"/>
+
+### Basic criteria queries
+
+Creation:
+```
+session.createCriteria(BillingDetails.class);
+```
+
+Ordering:
+```
+session.createCriteria(User.class)
+ .addOrder( Order.asc("lastname") )
+ .addOrder( Order.asc("firstname") );
+```
+
+Applying restrictions:
+```
+Criterion emailEq = Restrictions.eq("email", "foo@hibernate.org");
+Criteria crit = session.createCriteria(User.class);
+crit.add(emailEq);
+User user = (User) crit.uniqueResult();
+```
+
+Creating comparison expressions:
+```
+Criterion restriction =
+ Restrictions.between("amount",
+ new BigDecimal(100),
+ new BigDecimal(200) );
+session.createCriteria(Bid.class).add(restriction);
+session.createCriteria(Bid.class)
+ .add( Restrictions.gt("amount", new BigDecimal(100) ) );
+String[] emails = { "foo@hibernate.org", "bar@hibernate.org" };
+session.createCriteria(User.class)
+ .add( Restrictions.in("email", emails) );
+```
+
+String matching:
+```
+session.createCriteria(User.class)
+ .add( Restrictions.like("username", "G%") );
+session.createCriteria(User.class)
+ .add( Restrictions.like("username", "G", MatchMode.START) );
+```
+
+Combining expressions with logical operators:
+```
+session.createCriteria(User.class)
+ .add(
+ Restrictions.or(
+ Restrictions.and(
+ Restrictions.like("firstname", "G%"),
+ Restrictions.like("lastname", "K%")
+ ),
+ Restrictions.in("email", emails)
+ )
+ );
+```
+
+Writing subqueries:
+```
+DetachedCriteria subquery =
+ DetachedCriteria.forClass(Item.class, "i");
+subquery.add( Restrictions.eqProperty("i.seller.id", "u.id"))
+ .add( Restrictions.isNotNull("i.successfulBid") )
+ .setProjection( Property.forName("i.id").count() );
+Criteria criteria = session.createCriteria(User.class, "u")
+ .add( Subqueries.lt(10, subquery) );
+```
+
+Simple projection lists:
+```
+session.createCriteria(Item.class)
+ .add( Restrictions.gt("endDate", new Date()) )
+ .setProjection( Projections.id() );
+```
+
+<a name="native-sql"/>
+
+### Using native SQL queries
+
+Automatic resultset handling:
+```
+List result = session.createSQLQuery("select * from CATEGORY")
+ .addEntity(Category.class)
+ .list();
+```
+
+Retrieving scalar values:
+```
+session.createSQLQuery("select u.FIRSTNAME as fname from USERS u")
+ .addScalar("fname");
+```
