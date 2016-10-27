@@ -66,8 +66,19 @@
         + [Setting an isolation level](#setting-isolation-level)
         + [Optimistic concurrency control](#optimistic-concurrency-control)
         + [Obtaining additional isolation guarantees](#additional-isolation)
-
-        
+7. [Optimizing fetching and caching](#fetching-caching-optimizing)
+    * [Defining the global fetch plan](#global-fetch-plan)
+        + [The object-retrieval options](#object-retrieval-options)
+    * [Selecting a fetch strategy](#select-fetch-strategy)
+        + [Prefetching data in batches](#batch-prefetching)
+        + [Prefetching collections with subselects](#subselects-prefetching)
+    * [Caching fundamentals](#caching-fundamentals)
+        + [Caching strategies and scopes](#сaching-strategies-scopes)
+        + [The Hibernate cache architecture](#cache-architecture)
+    * [Caching in practice](#caching-in-practice)
+        + [Selecting a concurrency control strategy](#concurrency-control-strategy)
+        + [Controlling the second-level cache](#controlling-second-level-cache)
+    
 <hr>
 Hibernate (and JPA) require a constructor with no arguments for every persistent class. Hibernate calls persistent classes using Reflection API to init objects.
 Constructor may be non public, but it has to be at least package-visible. Proxy generation also requires that the class isn't declared final
@@ -1213,3 +1224,139 @@ session.close();
 * `LockMode.UPDGRADE_NOWAIT` - The same as UPGRADE, but use a SELECT ... FOR UPDATE NOWAIT, if supported. This disables waiting for concurrent lock releases, thus throwing a locking exception immediately if the lock can’t be obtained. This mode transparently falls back to LockMode.UPGRADE if the database SQL dialect doesn’t support the NOWAIT option.
 * `LockMode.FORCE` - Force an increment of the objects version in the database, to indicate that it has been modified by the current transaction. Equivalent to LockModeType.WRITE in Java Persistence.
 * `LockMode.WRITE` - Obtained automatically when Hibernate has written to a row in the current transaction. (This is an internal mode; you may not specify it in your application.) 
+
+<a name="fetching-caching-optimizing"/>
+
+## Optimizing fetching and caching
+
+<a name="global-fetch-plan"/>
+
+### Defining the global fetch plan
+
+<a name="object-retrieval-options"/>
+
+#### The object-retrieval options
+
+Hibernate provides the following ways to get objects out of the database:
+
+* Navigating the object graph, starting from an already loaded object, by accessing the associated objects through property accessor methods such as `aUser.getAddress().getCity()`, and so on.
+* Retrieval by identifier, the most convenient method when the unique identifier value of an object is known.
+* HQL
+* `Criteria`
+* Native SQL
+
+Hibernate defaults to a lazy fetching strategy for all entities and collections. This means that Hibernate by default loads only the objects you’re querying for.
+ 
+Proxies are placeholders that are generated at runtime. Whenever Hibernate returns an instance of an entity class, it checks whether it can return a proxy instead and avoid a database hit. A proxy is a placeholder that triggers the loading of the real object when it’s accessed for the first time:
+```
+Item item = (Item) session.load(Item.class, new Long(123));
+item.getId();
+item.getDescription(); // Initialize the proxy
+```
+
+If you call `get()` instead of `load()` you trigger a database hit and no proxy is returned. The `get()` operation always hits the database and returns `null` if the object can’t be found.
+If you want to disable proxies:
+```
+@org.hibernate.annotations.Proxy(lazy = false)
+public class User { ... }
+```
+Eager collection fetching:
+```
+@OneToMany(fetch = FetchType.EAGER)
+private Set<Bid> bids = new HashSet<Bid>();
+```
+The `FetchType.EAGER` provides the same guarantees as `lazy="false"` in Hibernate: the associated entity instance must be fetched eagerly, not lazily.
+
+<a name="select-fetch-strategy"/>
+
+### Selecting a fetch strategy
+
+<a name="batch-prefetching"/>
+
+#### Prefetching data in batches
+
+The first optimization is called _batch fetching_, and it works as follows: If one proxy of a `User` must be initialized, go ahead and initialize several in the same `SELECT`.
+```
+@org.hibernate.annotations.BatchSize(size = 10)
+public class User { ... }
+```
+
+<a name="subselects-prefetching"/>
+
+#### Prefetching collections with subselects
+Let’s take the last example and apply a (probably) better prefetch optimization:
+```
+List allItems = session.createQuery("from Item").list();
+processBids( (Item)allItems.get(0) );
+processBids( (Item)allItems.get(1) );
+processBids( (Item)allItems.get(2) );
+```
+
+A much better optimization is _subselect fetching_ for this collection mapping:
+```
+@org.hibernate.annotations.Fetch(
+ org.hibernate.annotations.FetchMode.SUBSELECT
+)
+private Set<Bid> bids = new HashSet<Bid>();}
+```
+
+<a name="caching-fundamentals"/>
+
+### Caching fundamentals
+
+<a name="caching-strategies-scopes"/>
+
+#### Caching strategies and scopes
+
+There are three main types of cache:
+
+* _Transaction scope cache_ - Attached to the current unit of work, which may be a database transaction or even a conversation. It’s valid and used only as long as the unit of work runs. Every unit of work has its own cache. Data in this cache isn’t accessed concurrently.
+* _Process scope cache_ - Shared between many (possibly concurrent) units of work or transactions. This means that data in the process scope cache is accessed by concurrently running threads, obviously with implications on transaction isolation.
+* _Cluster scope cache_ - Shared between multiple processes on the same machine or between multiple machines in a cluster. Here, network communication is an important point worth consideration.
+ 
+ <a name="cache-architecture"/>
+
+#### The Hibernate cache architecture
+
+* The first-level cache is the persistence context cache. A Hibernate Session lifespan corresponds to either a single request (usually implemented with one database transaction) or a conversation.
+* The second-level cache in Hibernate is pluggable and may be scoped to the process or cluster. This is a cache of state (returned by value), not of actual persistent instances.
+
+The four built-in concurrency strategies represent decreasing levels of strictness in terms of transaction isolation:
+* Transactional - Available in a managed environment only, it guarantees full transactional isolation up to repeatable read, if required. Use this strategy for read-mostly data where it’s critical to prevent stale data in concurrent transactions, in the rare case of an update.
+* Read-write - This strategy maintains read committed isolation, using a timestamping mechanism and is available only in nonclustered environments. Again, use this strategy for read-mostly data where it’s critical to prevent stale data in concurrent transactions, in the rare case of an update.
+* Nonstrict-read-write - Makes no guarantee of consistency between the cache and the database. If there is a possibility of concurrent access to the same entity, you should configure a sufficiently short expiry timeout. Otherwise, you may read stale data from the cache. Use this strategy if data hardly ever changes (many hours, days, or even a week) and a small likelihood of stale data isn’t of critical concern.
+* Read-only - A concurrency strategy suitable for data which never changes. Use it for reference data only.
+
+![alt tag](readmeImgs/caches.png)
+
+<a name="caching-in-practice"/>
+
+### Caching in practice
+
+<a name="concurrency-control-strategy"/>
+
+#### Selecting a concurrency control strategy
+
+```
+@Entity
+@Table(name = "CATEGORY")
+@org.hibernate.annotations.Cache(usage =
+ org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE
+)
+public class Category { ... }
+```
+
+<a name="controlling-second-level-cache"/>
+
+#### Controlling the second-level cache
+```
+Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+session.setCacheMode(CacheMode.IGNORE);
+```
+
+The available options are as follows:
+* `CacheMode.NORMAL`- The default behavior.* `CacheMode.IGNORE`- Hibernate never interacts with the second-level cache except to invalidate cached items when updates occur.
+* `CacheMode.GET`- Hibernate may read items from the second-level cache,but it won’t add items except to invalidate items when updates occur.
+* `CacheMode.PUT`- Hibernate never reads items from the second-level cache,but it adds items to the cache as it reads them from the database.
+* `CacheMode.REFRESH`- Hibernate never reads items from the second-levelcache, but it adds items to the cache as it reads them from the database. In this mode, the effect of hibernate.cache.use_minimal_puts is bypassed, in order to force a cache refresh in a replicated cluster cache.
