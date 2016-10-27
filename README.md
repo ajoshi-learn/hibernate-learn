@@ -1242,7 +1242,7 @@ Hibernate provides the following ways to get objects out of the database:
 * Navigating the object graph, starting from an already loaded object, by accessing the associated objects through property accessor methods such as `aUser.getAddress().getCity()`, and so on.
 * Retrieval by identifier, the most convenient method when the unique identifier value of an object is known.
 * HQL
-* `Criteria`
+* Criteria
 * Native SQL
 
 Hibernate defaults to a lazy fetching strategy for all entities and collections. This means that Hibernate by default loads only the objects you’re querying for.
@@ -1356,7 +1356,8 @@ session.setCacheMode(CacheMode.IGNORE);
 ```
 
 The available options are as follows:
-* `CacheMode.NORMAL`- The default behavior.* `CacheMode.IGNORE`- Hibernate never interacts with the second-level cache except to invalidate cached items when updates occur.
+* `CacheMode.NORMAL`- The default behavior.
+* `CacheMode.IGNORE`- Hibernate never interacts with the second-level cache except to invalidate cached items when updates occur.
 * `CacheMode.GET`- Hibernate may read items from the second-level cache,but it won’t add items except to invalidate items when updates occur.
 * `CacheMode.PUT`- Hibernate never reads items from the second-level cache,but it adds items to the cache as it reads them from the database.
 * `CacheMode.REFRESH`- Hibernate never reads items from the second-levelcache, but it adds items to the cache as it reads them from the database. In this mode, the effect of hibernate.cache.use_minimal_puts is bypassed, in order to force a cache refresh in a replicated cluster cache.
