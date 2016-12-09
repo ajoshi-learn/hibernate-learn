@@ -15,7 +15,7 @@ import javax.persistence.*;
 public abstract class BillingDetails {
     @Id @GeneratedValue
     @Column(name = "BILLING_DETAILS_ID")
-    private Long id = null;
+    private Long id;
 
     @Column(name = "OWNER", nullable = false)
     private String owner;

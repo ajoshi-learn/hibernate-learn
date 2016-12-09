@@ -15,8 +15,17 @@ import javax.persistence.Table;
 @Data
 @Entity
 @PrimaryKeyJoinColumn(name = "CREDIT_CARD_ID")
-@Table(name = "CREDIT_CARD")
+@Table(name = "CREDIT_CARD_ACCOUNT")
 public class CreditCard extends BillingDetails {
     @Column(name = "NUMBER", nullable = false)
     private String number;
+
+    @Override
+    public String toString() {
+        return "CreditCard{" +
+                "number='" + number + '\'' +
+                "id='" + getId() + '\'' +
+                "owner='" + getOwner() + '\'' +
+                '}';
+    }
 }

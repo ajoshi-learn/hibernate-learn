@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
 /**
@@ -13,6 +14,7 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @Data
 @Entity
+@PrimaryKeyJoinColumn(name = "BANK_ACCOUNT_ID")
 @Table(name = "BANK_ACCOUNT")
 public class BankAccount extends BillingDetails {
     @Column(name = "ACCOUNT", nullable = false)

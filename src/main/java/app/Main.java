@@ -8,7 +8,6 @@ import app.book.entities.inheritanceexamples.tablepersubclass.BankAccount;
 import app.book.entities.inheritanceexamples.tablepersubclass.CreditCard;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 
 import java.math.BigDecimal;
 import java.util.Currency;
@@ -21,7 +20,7 @@ public class Main {
         SessionFactory sessionFactory = HibernateConfigurator.getSessionFactory();
         Session session = sessionFactory.openSession();
         session.beginTransaction();
-        testOneToOneAssociation(session);
+        testTablePerClass(session);
         session.getTransaction().commit();
         session.close();
         sessionFactory.close();
@@ -64,6 +63,17 @@ public class Main {
         shippingAddress.setUser(newUser); // Bidirectional
         session.save(shippingAddress);
         session.save(newUser);
+    }
+
+    private static void testTablePerClass(Session session) {
+        CreditCard creditCard = new CreditCard();
+        creditCard.setId(1L);
+        creditCard.setOwner("ajoshi");
+        creditCard.setNumber("12321");
+        session.save(creditCard);
+
+        CreditCard loadedCreditCard = session.load(CreditCard.class, 2l);
+        System.out.println(loadedCreditCard);
     }
 
 //    private static void testSimpleEntitySaving(Session session) {
