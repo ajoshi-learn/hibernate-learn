@@ -1,16 +1,10 @@
 package app;
 
-import app.book.entities.Item;
-import app.book.entities.advancedmappingsexamples.Address;
-import app.book.entities.advancedmappingsexamples.User;
-import app.book.entities.custommappingtypes.entities.MonetaryAmount;
-import app.book.entities.inheritanceexamples.tablepersubclass.BankAccount;
-import app.book.entities.inheritanceexamples.tablepersubclass.CreditCard;
+import app.book.entities.ternaryassociations.Account;
+import app.book.entities.ternaryassociations.Category;
+import app.book.entities.ternaryassociations.Item;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-
-import java.math.BigDecimal;
-import java.util.Currency;
 
 /**
  * Created by ajoshi on 12-Sep-16.
@@ -20,61 +14,78 @@ public class Main {
         SessionFactory sessionFactory = HibernateConfigurator.getSessionFactory();
         Session session = sessionFactory.openSession();
         session.beginTransaction();
-        testTablePerClass(session);
+        saveTernary(session);
         session.getTransaction().commit();
         session.close();
         sessionFactory.close();
     }
 
+    private static void saveTernary(Session session) {
+        Account account = new Account();
+        account.setUsername("ajoshi");
+        session.save(account);
+
+        Item item = new Item();
+        item.setItemName("item1");
+        session.save(item);
+
+        Category category = new Category();
+        category.setCategoryName("category1");
+        category.getItemsAccounts().put(item, account);
+        session.save(category);
+    }
+
 //    private static void saveUser(Session session) {
-//        User user = new User();
+//        Category user = new Category();
 //        user.setName("artur joshi");
 //        session.save(user);
 //        session.flush();
 //    }
 
-    private static void testInheritance(Session session) {
-        CreditCard creditCard = new CreditCard();
-        creditCard.setOwner("ajoshi");
-        creditCard.setNumber("12321");
+//    private static void saveBid(Session session) {
+//        Bid bid = new Bid();
+//        bid.setField1("field1");
+//        bid.setField2("field2");
+//        session.save(bid);
+//        System.out.println(session.get(Bid.class, 1L));
+//    }
 
-        BankAccount bankAccount = new BankAccount();
-        bankAccount.setOwner("ajoshi");
-        bankAccount.setAccount("account");
-        session.save(creditCard);
-        session.save(bankAccount);
-        session.flush();
-    }
+//    private static void testInheritance(Session session) {
+//        CreditCard creditCard = new CreditCard();
+//        creditCard.setOwner("ajoshi");
+//        creditCard.setNumber("123123");
+//        session.save(creditCard);
+//    }
+//
+//    private static void testCustomUserType(Session session) {
+//        Item item = new Item();
+//        item.setName("testItem");
+//        MonetaryAmount initialPrice = new MonetaryAmount(BigDecimal.TEN, Currency.getInstance("USD"));
+//        item.setInitialPrice(initialPrice);
+//        session.save(item);
+//    }
 
-    private static void testCustomUserType(Session session) {
-        Item item = new Item();
-        item.setName("testItem");
-        MonetaryAmount initialPrice = new MonetaryAmount(BigDecimal.TEN, Currency.getInstance("USD"));
-        item.setInitialPrice(initialPrice);
-        session.save(item);
-    }
+//    private static void testOneToOneAssociation(Session session) {
+//        Category newUser = new Category();
+//        newUser.setName("name");
+//        Address shippingAddress = new Address();
+//        shippingAddress.setAddress("address");
+//        newUser.setShippingAddress(shippingAddress);
+//        shippingAddress.setUser(newUser); // Bidirectional
+//        session.save(shippingAddress);
+//        session.save(newUser);
+//    }
 
-    private static void testOneToOneAssociation(Session session) {
-        User newUser = new User();
-        newUser.setName("name");
-        Address shippingAddress = new Address();
-        shippingAddress.setAddress("address");
-        newUser.setShippingAddress(shippingAddress);
-        shippingAddress.setUser(newUser); // Bidirectional
-        session.save(shippingAddress);
-        session.save(newUser);
-    }
-
-    private static void testTablePerClass(Session session) {
-        CreditCard creditCard = new CreditCard();
-        creditCard.setId(1L);
-        creditCard.setOwner("ajoshi");
-        creditCard.setNumber("12321");
-        session.save(creditCard);
-
-        CreditCard loadedCreditCard = session.load(CreditCard.class, 2l);
-        System.out.println(loadedCreditCard);
-    }
+//    private static void testTablePerClass(Session session) {
+//        CreditCard creditCard = new CreditCard();
+//        creditCard.setId(1L);
+//        creditCard.setOwner("ajoshi");
+//        creditCard.setNumber("12321");
+//        session.save(creditCard);
+//
+//        CreditCard loadedCreditCard = session.load(CreditCard.class, 2l);
+//        System.out.println(loadedCreditCard);
+//    }
 
 //    private static void testSimpleEntitySaving(Session session) {
 //        Employee employee = new Employee();

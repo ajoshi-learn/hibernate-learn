@@ -41,10 +41,6 @@ public class Item {
     @OneToMany(mappedBy = "item", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private Set<Bid> bids = new HashSet<>();
 
-    public void addBid(Bid bid) {
-        bid.setItem(this);
-        bids.add(bid);
-    }
 //    public void addCategory(Category category) {
 //        if(category == null) {
 //            throw new IllegalArgumentException("Null category");

@@ -173,7 +173,7 @@ Entities, by nature of their unique identifier, exist independently of other obj
 
 Hint: First of all try to make everything as value-typed class and promote it to an entity only when absolutely necessary.
 As the next step you should care about three things:
-* _Shared references_: Write your POJO classes in a way that avoids shared references to value type instances. For example, make sure an `Address` object can be referenced by only one `User`. For example, make it immutable and enforce the relationship with the `Address` constructor
+* _Shared references_: Write your POJO classes in a way that avoids shared references to value type instances. For example, make sure an `Address` object can be referenced by only one `Category`. For example, make it immutable and enforce the relationship with the `Address` constructor
 * _Lifecycle dependencies_: As discussed, the lifecycle of a value-type instance is bound to that of its owning entity instance. If a User object is deleted, its `Address` dependent object(s) have to be deleted as well.
 * _Identity_: Entity classes need an identifier property in almost all cases. User-defined value-type classes (and JDK classes) don’t have an identifier property, because instances are identified through the owning entity.
 
@@ -1283,7 +1283,7 @@ The `FetchType.EAGER` provides the same guarantees as `lazy="false"` in Hibernat
 
 #### Prefetching data in batches
 
-The first optimization is called _batch fetching_, and it works as follows: If one proxy of a `User` must be initialized, go ahead and initialize several in the same `SELECT`.
+The first optimization is called _batch fetching_, and it works as follows: If one proxy of a `Category` must be initialized, go ahead and initialize several in the same `SELECT`.
 ```
 @org.hibernate.annotations.BatchSize(size = 10)
 public class User { ... }
@@ -1390,7 +1390,7 @@ Query sqlQuery = session.createSQLQuery(
  "select {user.*} from USERS {user}"
  ).addEntity("user", User.class);
 ```
-To obtain a `Criteria` instance, call `createCriteria()`, passing the class of the objects you want the query to return. This is also called the root entity of the criteria query, the `User` in this example:
+To obtain a `Criteria` instance, call `createCriteria()`, passing the class of the objects you want the query to return. This is also called the root entity of the criteria query, the `Category` in this example:
 ```
 Criteria crit = session.createCriteria(User.class);
 ```
@@ -1480,7 +1480,7 @@ The as keyword is always optional. The following is equivalent:
 `from Item item`
 
 **_Restriction_**
-`from User u where u.email = 'foo@hibernate.org'`
+`from Category u where u.email = 'foo@hibernate.org'`
 
 **_Comparison expressions_**
 ```

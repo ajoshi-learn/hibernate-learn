@@ -10,11 +10,15 @@ public class HibernateConfigurator {
     private static SessionFactory sessionFactory;
 
     static {
-        Configuration configuration = new Configuration().configure();
-//        configuration.registerTypeContributor(((typeContributions, serviceRegistry) -> {
-//            typeContributions.contributeType(BitSetType.INSTANCE);
-//        }));
-        sessionFactory = configuration.buildSessionFactory();
+//        Configuration configuration = new Configuration().configure();
+////        configuration.registerTypeContributor(((typeContributions, serviceRegistry) -> {
+////            typeContributions.contributeType(BitSetType.INSTANCE);
+////        }));
+//        sessionFactory = configuration.buildSessionFactory();
+
+        sessionFactory = new Configuration()
+                .configure()
+                .buildSessionFactory();
     }
 
     public static SessionFactory getSessionFactory() {

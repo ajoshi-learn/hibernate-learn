@@ -11,7 +11,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "users")
+@Table(name = "categories")
 public class User {
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
