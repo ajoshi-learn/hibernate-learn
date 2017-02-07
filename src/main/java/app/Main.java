@@ -1,10 +1,10 @@
 package app;
 
-import app.book.entities.ternaryassociations.Account;
-import app.book.entities.ternaryassociations.Category;
-import app.book.entities.ternaryassociations.Item;
+import app.book.entities.inheritanceexamples.tableperclasshierarchy.BillingDetails;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+
+import java.util.List;
 
 /**
  * Created by ajoshi on 12-Sep-16.
@@ -14,26 +14,33 @@ public class Main {
         SessionFactory sessionFactory = HibernateConfigurator.getSessionFactory();
         Session session = sessionFactory.openSession();
         session.beginTransaction();
-        saveTernary(session);
+        testInheritance(session);
         session.getTransaction().commit();
         session.close();
         sessionFactory.close();
     }
 
-    private static void saveTernary(Session session) {
-        Account account = new Account();
-        account.setUsername("ajoshi");
-        session.save(account);
-
-        Item item = new Item();
-        item.setItemName("item1");
-        session.save(item);
-
-        Category category = new Category();
-        category.setCategoryName("category1");
-        category.getItemsAccounts().put(item, account);
-        session.save(category);
+    private static void testInheritance(Session session) {
+        List<BillingDetails> list = session.createCriteria(BillingDetails.class).list();
+        for (BillingDetails billingDetails : list) {
+            System.out.println(billingDetails);
+        }
     }
+
+//    private static void saveTernary(Session session) {
+//        Account account = new Account();
+//        account.setUsername("ajoshi");
+//        session.save(account);
+//
+//        Item item = new Item();
+//        item.setItemName("item1");
+//        session.save(item);
+//
+//        Category category = new Category();
+//        category.setCategoryName("category1");
+//        category.getItemsAccounts().put(item, account);
+//        session.save(category);
+//    }
 
 //    private static void saveUser(Session session) {
 //        Category user = new Category();

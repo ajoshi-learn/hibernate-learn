@@ -7,15 +7,15 @@
         <property name="hibernate.connection.url">jdbc:postgresql://localhost/jpwh</property>
         <property name="hibernate.connection.username">postgres</property>
         <property name="hibernate.connection.password">root</property>
-        <property name="hibernate.hbm2ddl.auto">create</property>
+        <property name="hibernate.hbm2ddl.auto">update</property>
         <property name="show_sql">true</property>
         <!--<mapping class="app.book.entities.inheritanceexamples.tablepersubclass.BillingDetails"/>-->
         <!--<mapping class="app.book.entities.inheritanceexamples.tablepersubclass.BankAccount"/>-->
         <!--<mapping class="app.book.entities.inheritanceexamples.tablepersubclass.CreditCard"/>-->
         <!--<mapping class="app.book.entities.associationsexamples.entities.Bid"/>-->
 
-        <mapping class="app.book.entities.ternaryassociations.Account"/>
-        <mapping class="app.book.entities.ternaryassociations.Category"/>
-        <mapping class="app.book.entities.ternaryassociations.Item"/>
+        <mapping class="app.book.entities.inheritanceexamples.tableperclasshierarchy.BillingDetails"/>
+        <mapping class="app.book.entities.inheritanceexamples.tableperclasshierarchy.BankAccount"/>
+        <mapping class="app.book.entities.inheritanceexamples.tableperclasshierarchy.CreditCard"/>
     </session-factory>
 </hibernate-configuration>
